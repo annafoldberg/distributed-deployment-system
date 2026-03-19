@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="DeploymentManager.Agent/DeploymentManager.Agent.csproj" />
+  <Project Path="DeploymentManager.Api/DeploymentManager.Api.csproj" />
+  <Project Path="DeploymentManager.Cli/DeploymentManager.Cli.csproj" />
+</Solution>
