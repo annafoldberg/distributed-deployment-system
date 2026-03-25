@@ -1,0 +1,68 @@
+# Release workflow for Agent
+# - Runs after successful Agent CI on main.
+# - Uploads Agent release artifacts from CI workflow run to GitHub Releases.
+
+name: Agent Release
+
+on:
+  workflow_run:
+    workflows: ["Agent CI"]
+    types:
+      - completed
+    branches:
+      - main
+    
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  release:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Read version from project
+        id: version
+        run: |
+          version=$(dotnet msbuild ./DeploymentManager.Agent/DeploymentManager.Agent.csproj -getProperty:Version)
+          echo "tag=v$version" >> $GITHUB_OUTPUT
+
+      - name: Download packaged assets
+        uses: actions/download-artifact@484a0b528fb4d7bd804637ccb632e47a0e638317
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          path: ./release-assets
+          pattern: agent-*
+          merge-multiple: true
+
+      - name: Release
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe
+        with:
+          name: Agent ${{ steps.version.outputs.tag }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.event.workflow_run.head_sha }}
+          files: ./release-assets/*.zip
+          generate_release_notes: true
+
+# Sources:
+# Workflow syntax: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+# .NET RID: https://learn.microsoft.com/en-us/dotnet/core/rid-catalog
+# Version from msbuild: https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-command-line-reference?view=visualstudio
+# Output parameters: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#setting-an-output-parameter
+# Checkout action: https://github.com/marketplace/actions/checkout?version=v6.0.2
+# Setup .NET action: https://github.com/marketplace/actions/setup-net-core-sdk?version=v5.2.0
+# Download artifact action: https://github.com/marketplace/actions/download-a-build-artifact?version=v8.0.1
+# GitHub Release action: https://github.com/marketplace/actions/gh-release?version=v2.6.1

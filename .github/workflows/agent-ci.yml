@@ -1,0 +1,85 @@
+# CI workflow for Agent
+# - Builds Agent on pull requests to main and dev.
+# - Builds and uploads Agent artifacts to GitHub Actions on push to main and dev.
+
+name: Agent CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - 'DeploymentManager.Agent/**'
+      - '.github/workflows/agent-ci.yml'
+  pull_request:
+    branches:
+      - main
+      - dev
+    paths:
+      - 'DeploymentManager.Agent/**'
+      - '.github/workflows/agent-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rid: [win-x64, linux-x64, osx-x64, osx-arm64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore ./DeploymentManager.Agent/DeploymentManager.Agent.csproj
+
+      - name: Read version from project
+        id: version
+        run: |
+          version=$(dotnet msbuild ./DeploymentManager.Agent/DeploymentManager.Agent.csproj -getProperty:Version)
+          echo "version=$version" >> $GITHUB_OUTPUT
+          
+      - name: Build
+        run: dotnet build ./DeploymentManager.Agent/DeploymentManager.Agent.csproj -c Release --no-restore
+
+      - name: Publish
+        if: github.event_name == 'push'
+        run: >
+          dotnet publish ./DeploymentManager.Agent/DeploymentManager.Agent.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          --no-restore
+          -p:PublishSingleFile=true
+          -o ./artifacts/${{ matrix.rid }}
+
+      - name: Zip artifact
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p ./release-assets
+          zip -r \
+            ./release-assets/deploymentmanager-agent-${{ matrix.rid }}-${{ steps.version.outputs.version }}.zip \
+            ./artifacts/${{ matrix.rid }}
+
+      - name: Upload
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: agent-${{ matrix.rid }}-${{ github.sha }}
+          path: ./release-assets/deploymentmanager-agent-${{ matrix.rid }}-${{ steps.version.outputs.version }}.zip
+
+# Sources:
+# Workflow syntax: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+# .NET RID: https://learn.microsoft.com/en-us/dotnet/core/rid-catalog
+# Self-contained deployment: https://learn.microsoft.com/en-us/dotnet/core/deploying/?pivots=cli
+# Checkout action: https://github.com/marketplace/actions/checkout?version=v6.0.2
+# Setup .NET action: https://github.com/marketplace/actions/setup-net-core-sdk?version=v5.2.0
+# Upload artifact action: https://github.com/marketplace/actions/upload-a-build-artifact?version=v7.0.0

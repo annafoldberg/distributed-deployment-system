@@ -1,0 +1,72 @@
+# CI workflow for API
+# - Builds Docker image on pull requests to main.
+# - Builds and pushes image to GHCR on push to main.
+
+name: API CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'DeploymentManager.Api/**'
+      - '.github/workflows/api-ci.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'DeploymentManager.Api/**'
+      - '.github/workflows/api-ci.yml'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: api
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Read version from project
+        id: version
+        run: |
+          version=$(dotnet msbuild ./DeploymentManager.Api/DeploymentManager.Api.csproj -getProperty:Version)
+          echo "tag=v$version" >> $GITHUB_OUTPUT
+
+      - name: Login to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and optionally push Docker image
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
+        with:
+          context: .
+          file: ./DeploymentManager.Api/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}
+
+# Sources:
+# Workflow syntax: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+# Publish docker images: https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images
+# Checkout action: https://github.com/marketplace/actions/checkout?version=v6.0.2
+# Login action: https://github.com/marketplace/actions/docker-login?version=v4.0.0
+# Metadata action: https://github.com/marketplace/actions/docker-metadata-action?version=v6.0.0
+# Build-push action: https://github.com/marketplace/actions/build-and-push-docker-images?version=v7.0.0

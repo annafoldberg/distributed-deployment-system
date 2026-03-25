@@ -15,5 +15,4 @@ Background worker periodically checking for changes in customer's desired softwa
 
 ---
 ## Related repository
-Demo updatable console application can be found at  
-[demo-updatable-app](https://github.com/annafoldberg/demo-updatable-app).
+Demo updatable console application can be found at [demo-updatable-app](https://github.com/annafoldberg/demo-updatable-app).
