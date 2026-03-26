@@ -39,7 +39,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore
-        run: dotnet restore ./DeploymentManager.Agent/DeploymentManager.Agent.csproj
+        run: dotnet restore ./DeploymentManager.Agent/DeploymentManager.Agent.csproj -r ${{ matrix.rid }}
 
       - name: Read version from project
         id: version
@@ -48,7 +48,7 @@ jobs:
           echo "version=$version" >> $GITHUB_OUTPUT
           
       - name: Build
-        run: dotnet build ./DeploymentManager.Agent/DeploymentManager.Agent.csproj -c Release --no-restore
+        run: dotnet build ./DeploymentManager.Agent/DeploymentManager.Agent.csproj -c Release -r ${{ matrix.rid }} --no-restore
 
       - name: Publish
         if: github.event_name == 'push'
