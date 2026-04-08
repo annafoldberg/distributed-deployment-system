@@ -1,6 +1,6 @@
 # CI workflow for API
-# - Builds Docker image on pull requests to main.
-# - Builds and pushes image to GHCR on push to main.
+# - Tests and builds Docker image on pull requests to main.
+# - Tests, builds and pushes image to GHCR on push to main.
 
 name: API CI
 
@@ -10,12 +10,14 @@ on:
       - main
     paths:
       - 'DeploymentManager.Api/**'
+      - 'DeploymentManager.Api.Tests/**'
       - '.github/workflows/api-ci.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'DeploymentManager.Api/**'
+      - 'DeploymentManager.Api.Tests/**'
       - '.github/workflows/api-ci.yml'
 
 env:
@@ -37,6 +39,9 @@ jobs:
         uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7
         with:
           dotnet-version: '10.0.x'
+
+      - name: Test
+        run: dotnet test ./DeploymentManager.Api.Tests/DeploymentManager.Api.Tests.csproj
 
       - name: Read version from project
         id: version
@@ -65,8 +70,10 @@ jobs:
 
 # Sources:
 # Workflow syntax: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+# Test: https://docs.github.com/en/actions/tutorials/build-and-test-code/net
 # Publish docker images: https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images
 # Checkout action: https://github.com/marketplace/actions/checkout?version=v6.0.2
+# Setup .NET action: https://github.com/marketplace/actions/setup-net-core-sdk?version=v5.2.0
 # Login action: https://github.com/marketplace/actions/docker-login?version=v4.0.0
 # Metadata action: https://github.com/marketplace/actions/docker-metadata-action?version=v6.0.0
 # Build-push action: https://github.com/marketplace/actions/build-and-push-docker-images?version=v7.0.0
