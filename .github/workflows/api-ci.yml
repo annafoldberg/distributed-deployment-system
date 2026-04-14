@@ -1,6 +1,7 @@
 # CI workflow for API
-# - Tests and builds Docker image on pull requests to main.
-# - Tests, builds and pushes image to GHCR on push to main.
+# - Tests and builds Docker image on pull requests to main and dev.
+# - Tests, builds and pushes dev image to GHCR on push to dev.
+# - Tests, builds and pushes stable image to GHCR on push to main.
 
 name: API CI
 
@@ -8,6 +9,7 @@ on:
   push:
     branches:
       - main
+      - dev
     paths:
       - 'DeploymentManager.Api/**'
       - 'DeploymentManager.Api.Tests/**'
@@ -15,6 +17,7 @@ on:
   pull_request:
     branches:
       - main
+      - dev
     paths:
       - 'DeploymentManager.Api/**'
       - 'DeploymentManager.Api.Tests/**'
@@ -57,7 +60,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and optionally push Docker image
+      - name: Build and optionally push Docker image for dev
+        if: github.ref_name == 'dev' || github.base_ref == 'dev'
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
+        with:
+          context: .
+          file: ./DeploymentManager.Api/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:dev-${{ github.sha }}
+      
+      - name: Build and optionally push Docker image for main
+        if: github.ref_name == 'main' || github.base_ref == 'main'
         uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
         with:
           context: .
@@ -75,5 +89,4 @@ jobs:
 # Checkout action: https://github.com/marketplace/actions/checkout?version=v6.0.2
 # Setup .NET action: https://github.com/marketplace/actions/setup-net-core-sdk?version=v5.2.0
 # Login action: https://github.com/marketplace/actions/docker-login?version=v4.0.0
-# Metadata action: https://github.com/marketplace/actions/docker-metadata-action?version=v6.0.0
 # Build-push action: https://github.com/marketplace/actions/build-and-push-docker-images?version=v7.0.0
