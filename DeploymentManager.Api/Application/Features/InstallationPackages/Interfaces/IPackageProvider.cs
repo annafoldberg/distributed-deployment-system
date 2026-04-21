@@ -1,4 +1,4 @@
-using DeploymentManager.Api.Application.Features.InstallationPackages.Models;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Dtos;
 
 namespace DeploymentManager.Api.Application.Features.InstallationPackages.Interfaces;
 
@@ -13,5 +13,5 @@ public interface IPackageProvider
     /// <param name="platform">Platform identifier (e.g. win-x64, osx-arm64).</param>
     /// <param name="version">Version (e.g. 1.0.0).</param>
     /// <returns>The installation package if found, otherwise <c>null</c>.</returns>
-    Task<InstallationPackage?> FetchPackageAsync(string platform, string version, CancellationToken ct);
+    Task<InstallationPackageDto?> FetchPackageAsync(string platform, string version, CancellationToken ct);
 }

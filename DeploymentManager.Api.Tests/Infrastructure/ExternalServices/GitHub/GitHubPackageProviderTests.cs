@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Models;
+using DeploymentManager.Api.Infrastructure.Configuration;
 using DeploymentManager.Api.Infrastructure.ExternalServices.GitHub;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -16,7 +16,7 @@ public sealed class GitHubPackageProviderTests
     private HttpClient _httpClient = null!;
     private GitHubPackageProvider _provider = null!;
     private string _releasePath = "/releases";
-    private string _downloadUrl = "https://download-url/";
+    private string _downloadUri = "https://download-url/";
 
     [TestInitialize]
     public void TestInitialize()
@@ -159,7 +159,7 @@ public sealed class GitHubPackageProviderTests
             "SendAsync",
             Times.Never(),
             ItExpr.Is<HttpRequestMessage>(r =>
-                r.RequestUri!.AbsoluteUri == _downloadUrl),
+                r.RequestUri!.AbsoluteUri == _downloadUri),
             ItExpr.IsAny<CancellationToken>());
     }
 
@@ -188,7 +188,7 @@ public sealed class GitHubPackageProviderTests
             "SendAsync",
             Times.Never(),
             ItExpr.Is<HttpRequestMessage>(r =>
-                r.RequestUri!.AbsoluteUri == _downloadUrl),
+                r.RequestUri!.AbsoluteUri == _downloadUri),
             ItExpr.IsAny<CancellationToken>());
     }
 
@@ -218,7 +218,7 @@ public sealed class GitHubPackageProviderTests
             "SendAsync",
             Times.Once(),
             ItExpr.Is<HttpRequestMessage>(r =>
-                r.RequestUri!.AbsoluteUri == _downloadUrl),
+                r.RequestUri!.AbsoluteUri == _downloadUri),
             ItExpr.IsAny<CancellationToken>());
     }
 
@@ -229,7 +229,7 @@ public sealed class GitHubPackageProviderTests
         {
             "assets": [
                 {
-                    "browser_download_url": "{{_downloadUrl}}",
+                    "browser_download_url": "{{_downloadUri}}",
                     "name": "app-{{platform}}.zip",
                     "content_type": "application/zip"
                 }
@@ -257,7 +257,7 @@ public sealed class GitHubPackageProviderTests
         _mockHttpHandler.Protected().Setup<Task<HttpResponseMessage>>(
             "SendAsync",
             ItExpr.Is<HttpRequestMessage>(r =>
-                r.RequestUri!.AbsoluteUri == _downloadUrl),
+                r.RequestUri!.AbsoluteUri == _downloadUri),
             ItExpr.IsAny<CancellationToken>()
         ).ReturnsAsync(new HttpResponseMessage
         {

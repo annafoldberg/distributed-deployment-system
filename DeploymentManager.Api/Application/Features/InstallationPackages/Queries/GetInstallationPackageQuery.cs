@@ -1,10 +1,10 @@
 using MediatR;
 using FluentResults;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Models;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Dtos;
 
 namespace DeploymentManager.Api.Application.Features.InstallationPackages.Queries;
 
 /// <summary>
 /// Query for retrieving the installation package for an agent.
 /// </summary>
-public record GetInstallationPackageQuery(Guid AgentId) : IRequest<Result<InstallationPackage>>;
+public sealed record GetInstallationPackageQuery(Guid AgentId) : IRequest<Result<InstallationPackageDto>>;
