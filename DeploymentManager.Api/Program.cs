@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Identity;
 using DeploymentManager.Api.Domain.Entities;
 using Microsoft.AspNetCore.Authentication;
 using DeploymentManager.Api.Presentation.Authentication;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,8 +62,9 @@ builder.Services.AddDbContext<DeploymentManagerDbContext>((serviceProvider, opti
         $"User Id={databaseOptions.User};" +
         $"Password={databaseOptions.Password};" +
         "TrustServerCertificate=True;" +
-        "Encrypt=True;";
-    
+        "Encrypt=True;";    
+
+    // Source: https://learn.microsoft.com/en-us/ef/core/modeling/data-seeding
     options.UseSqlServer(connectionString)
         .UseSeeding((context, _) =>
         {
@@ -104,7 +106,9 @@ builder.Services.AddHttpClient<IPackageProvider, GitHubPackageProvider>((service
 
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
+    .AddDbContextCheck<DeploymentManagerDbContext>(tags: new[] { "ready" });
 
 // Register authentication scheme
 builder.Services
@@ -135,6 +139,13 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+// Source: https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/applying?tabs=dotnet-core-cli#idempotent-sql-scripts
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<DeploymentManagerDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -147,13 +158,13 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHealthChecks("/health/live", new HealthCheckOptions
+app.MapHealthChecks("/healthz/live", new HealthCheckOptions
 {
-    Predicate = r => r.Tags.Contains("live")
+    Predicate = h => h.Tags.Contains("live")
 });
-app.MapHealthChecks("/health/ready", new HealthCheckOptions
+app.MapHealthChecks("/healthz/ready", new HealthCheckOptions
 {
-    Predicate = r => r.Tags.Contains("ready")
+    Predicate = h => h.Tags.Contains("ready")
 });
 
 app.Run();
