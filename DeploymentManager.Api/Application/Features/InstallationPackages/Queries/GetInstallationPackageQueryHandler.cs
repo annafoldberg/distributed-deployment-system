@@ -52,7 +52,7 @@ public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInst
             .FirstOrDefaultAsync(i => i.AgentId == agent.Id, ct);
 
         var currentRelease = installation?.Release;
-        if (currentRelease is not null && currentRelease.Version == currentRelease.Version)
+        if (currentRelease is not null && currentRelease.Version == desiredRelease.Version)
         {
             _logger.LogInformation("Version {Version} is already installed for agent {AgentId}.", desiredRelease.Version, agent.PublicId);
             return Result.Fail(new NoUpdateRequiredError());
