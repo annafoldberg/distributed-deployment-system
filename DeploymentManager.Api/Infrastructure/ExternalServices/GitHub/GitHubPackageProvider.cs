@@ -1,7 +1,7 @@
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using DeploymentManager.Api.Application.Features.InstallationPackages.Interfaces;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Models;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Dtos;
+using DeploymentManager.Api.Infrastructure.Configuration;
 
 namespace DeploymentManager.Api.Infrastructure.ExternalServices.GitHub;
 
@@ -26,7 +26,7 @@ public class GitHubPackageProvider : IPackageProvider
         _logger = logger;
     }
 
-    public async Task<InstallationPackage?> FetchPackageAsync(string platform, string version, CancellationToken ct)
+    public async Task<InstallationPackageDto?> FetchPackageAsync(string platform, string version, CancellationToken ct)
     {
         // Validate input
         if (string.IsNullOrWhiteSpace(platform) || string.IsNullOrWhiteSpace(version))
@@ -51,9 +51,7 @@ public class GitHubPackageProvider : IPackageProvider
         if (asset == null)
         {
             _logger.LogWarning(
-                "No matching asset found for platform {Platform} and version {Version}",
-                platform,
-                version);
+                "No matching asset found for platform {Platform} and version {Version}", platform, version);
             return null;
         }
 
@@ -61,7 +59,7 @@ public class GitHubPackageProvider : IPackageProvider
         var content = await DownloadAssetAsync(asset.BrowserDownloadUrl, ct);
         if (content == null) return null;
 
-        return new InstallationPackage(content, asset.ContentType, asset.Name);
+        return new InstallationPackageDto(content, asset.ContentType, asset.Name);
     }
 
     /// <summary>
@@ -97,23 +95,31 @@ public class GitHubPackageProvider : IPackageProvider
         return await response.Content.ReadFromJsonAsync<GitHubReleaseDto>(ct);
     }
 
-    private async Task<Stream?> DownloadAssetAsync(string downloadUrl, CancellationToken ct)
+    private async Task<Stream?> DownloadAssetAsync(string downloadUri, CancellationToken ct)
     {
         // ResponseHeadersRead avoids buffering large responses into memory
-        var response = await _httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+        using var response = await _httpClient.GetAsync(downloadUri, HttpCompletionOption.ResponseHeadersRead, ct);
         
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError(
-                "GitHub asset download failed for {DownloadUrl} with status code {StatusCode}",
-                downloadUrl,
+                "GitHub asset download failed for {DownloadUri} with status code {StatusCode}",
+                downloadUri,
                 response.StatusCode);
             return null;
         }
-        return await response.Content.ReadAsStreamAsync(ct);
+
+        using var responseStream = await response.Content.ReadAsStreamAsync(ct);
+
+        var content = new MemoryStream();
+        await responseStream.CopyToAsync(content, ct);
+        content.Position = 0;
+
+        return content;
     }
 }
 
 // Sources:
 // HTTP requests: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/http-requests?view=aspnetcore-10.0
 // GitHub Releases API: https://docs.github.com/en/rest/releases/releases?apiVersion=2026-03-10
+// StreamContent: https://learn.microsoft.com/en-us/dotnet/api/system.net.http.streamcontent?view=net-10.0

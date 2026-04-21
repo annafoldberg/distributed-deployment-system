@@ -6,7 +6,7 @@ namespace DeploymentManager.Api.Application.Common.Behaviors;
 /// <summary>
 /// Validates requests in the MediatR pipeline.
 /// </summary>
-public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
