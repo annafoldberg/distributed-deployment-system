@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: deployment-manager
+data:
+  ASPNETCORE_URLS: http://+:8080
+  Database__Host: "mssql.deployment-manager.svc.cluster.local"
+  Database__Name: "DeploymentManagerDatabase"
+  Database__User: "sa"
+  AgentSeeding__Agents__0__PublicId: "b649f77b-42d1-427b-a00b-bc15bbc382d5"
+  AgentSeeding__Agents__1__PublicId: "331be03d-4543-45ea-aeb1-582dcbd89af7"
+  AgentSeeding__Agents__0__Platform: "osx-arm64"
+  AgentSeeding__Agents__1__Platform: "win-x64"
+  GitHub__Owner: "annafoldberg"
+  GitHub__Repository: "demo-updatable-app"
+
+# Source: https://kubernetes.io/docs/concepts/configuration/configmap/

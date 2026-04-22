@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: deployment-manager
+  labels:
+    kubernetes.io/metadata.name: deployment-manager
+
+# Source: https://kubernetes.io/docs/tutorials/cluster-management/namespaces-walkthrough/

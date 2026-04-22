@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: deployment-manager
+  labels:
+    app.kubernetes.io/name: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api
+    spec:
+      terminationGracePeriodSeconds: 20
+      containers:
+      - name: api
+        image: ghcr.io/annafoldberg/api:dev-b5c7a66621324d93b65577afb85b3a58ef20f155
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: api-config
+        - secretRef:
+            name: api-secret
+        readinessProbe:
+          httpGet:
+            path: /healthz/ready
+            port: 8080
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+        livenessProbe:
+          httpGet:
+            path: /healthz/live
+            port: 8080
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+# Sources:
+# Deployment documentation: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+# Field details: kubectl explain
+# Inspired by previous personal deployments:
+# https://github.com/Team-2-Devs/infra-core/blob/main/k8s/
