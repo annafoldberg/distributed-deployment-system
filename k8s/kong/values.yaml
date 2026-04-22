@@ -1,0 +1,20 @@
+ingressController:
+  enabled: true
+  ingressClass: kong
+env:
+  database: "off"
+proxy:
+  type: LoadBalancer
+  http:
+    enabled: false
+  tls:
+    enabled: true
+    servicePort: 443
+    containerPort: 8443
+secretVolumes:
+  - kong-ingress-tls
+
+# Sources:
+# Kong Helm chart documentation: https://artifacthub.io/packages/helm/kong/kong
+# Inspired by previous personal kong values:
+# https://github.com/annafoldberg/annafoldberg.github.io/blob/main/_projects/trackunit/kong-values-ingress-tls/en.md

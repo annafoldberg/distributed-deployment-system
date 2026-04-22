@@ -476,4 +476,12 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
+# Kubernetes artifacts
+secret.yaml
+*.key
+*.crt
+
+# SQL Server
+*.sql
+
 # Source: Generated with 'dotnet new gitignore'

@@ -1,0 +1,49 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kong-network-policy
+  namespace: deployment-manager
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: kong
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+    - ports:
+      - protocol: TCP
+        port: 8443 # HTTPS
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: deployment-manager
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: api
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow reaching kube-apiserver to watch resources
+  - to:
+        - ipBlock:
+            cidr: 172.21.0.0/16 # Kind node network (API server NodePort)
+    ports:
+      - port: 6443
+        protocol: TCP
+  # Allow DNS to CoreDNS in kube-system
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+
+# Sources:
+# Network policies documentation: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+# Inspired by previous personal network policies:
+# https://github.com/Team-2-Devs/infra-core/blob/main/k8s/

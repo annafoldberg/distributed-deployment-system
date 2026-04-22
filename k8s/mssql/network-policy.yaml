@@ -1,0 +1,56 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-network-policy
+  namespace: deployment-manager
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ingress        
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: kong
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: deployment-manager        
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: mssql
+    ports:
+    - protocol: TCP
+      port: 1433
+  # Allow DNS to CoreDNS in kube-system
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+  # External HTTPS (GitHub)
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+      - protocol: TCP
+        port: 443
+
+# Sources:
+# Network policies documentation: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+# Inspired by previous personal network policies:
+# https://github.com/Team-2-Devs/infra-core/blob/main/k8s/
