@@ -94,26 +94,29 @@ Create `secret.yaml` from each `secret.yaml.tpl` and replace placeholder values 
 9. Select `System` → `Certificates`.  
 10. Drag `kong-tls.crt` into the certificate list.  
 11. Double-click the imported certificate → expand `Trust` → set `When using this certificate` to `Always Trust`.  
-12. Apply foundational manifests:
+12. Apply MSSQL secret:
     ```bash
-    kubectl apply -f k8s/kong/network-policy.yaml  
-    kubectl apply -f k8s/mssql/network-policy.yaml  
     kubectl apply -f k8s/mssql/secret.yaml  
     ```
 13. Install MSSQL Helm chart:
     ```bash
     helm install mssql emberstack/mssql -n deployment-manager -f k8s/mssql/values.yaml  
     ```
-14. Apply application manifests:
+14. Apply network policies:
+    ```bash
+    kubectl apply -f k8s/kong/network-policy.yaml  
+    kubectl apply -f k8s/mssql/network-policy.yaml  
+    ```
+15. Apply application manifests:
     ```bash
     kubectl apply -f k8s/api  
     ```
     *If errors occur, simply run the command again. Sometimes manifests are applied out of order, so dependent resources may not exist the first time.*
-15. Verify that all pods are running:
+16. Verify that all pods are running:
     ```bash
     kubectl get pods -A
     ```
-16. Start cloud-provider-kind:
+17. Start cloud-provider-kind:
     ```bash
     sudo /usr/local/bin/cloud-provider-kind
     ```

@@ -16,10 +16,7 @@ spec:
         port: 8443 # HTTPS
   egress:
   - to:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: deployment-manager
-      podSelector:
+    - podSelector:
         matchLabels:
           app.kubernetes.io/name: api
     ports:
@@ -27,8 +24,8 @@ spec:
       port: 8080
   # Allow reaching kube-apiserver to watch resources
   - to:
-        - ipBlock:
-            cidr: 172.21.0.0/16 # Kind node network (API server NodePort)
+    - ipBlock:
+        cidr: 172.21.0.0/16 # Kind node network (API server NodePort)
     ports:
       - port: 6443
         protocol: TCP

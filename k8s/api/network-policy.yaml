@@ -12,10 +12,7 @@ spec:
   - Egress
   ingress:
   - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: deployment-manager
-      podSelector:
+    - podSelector:
         matchLabels:
           app.kubernetes.io/name: kong
     ports:
@@ -23,10 +20,7 @@ spec:
       port: 8080
   egress:
   - to:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: deployment-manager
-      podSelector:
+    - podSelector:
         matchLabels:
           app.kubernetes.io/name: mssql
     ports:
