@@ -43,8 +43,7 @@ public sealed class AgentApiKeyAuthenticationHandler : AuthenticationHandler<Aut
         // Check API key header
         if (!Request.Headers.TryGetValue("X-API-KEY", out var apiKey))
         {
-            Logger.LogWarning("Missing API key in request.");
-            return AuthenticateResult.Fail("Missing API key.");
+            return AuthenticateResult.NoResult();
         }
 
         // Check agent's public ID from agentId route value
