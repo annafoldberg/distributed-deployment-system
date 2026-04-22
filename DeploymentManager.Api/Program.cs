@@ -161,10 +161,10 @@ app.MapControllers();
 app.MapHealthChecks("/healthz/live", new HealthCheckOptions
 {
     Predicate = h => h.Tags.Contains("live")
-});
+}).AllowAnonymous();
 app.MapHealthChecks("/healthz/ready", new HealthCheckOptions
 {
     Predicate = h => h.Tags.Contains("ready")
-});
+}).AllowAnonymous();
 
 app.Run();
