@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="DeploymentManager.Agent.Tests/DeploymentManager.Agent.Tests.csproj" />
   <Project Path="DeploymentManager.Agent/DeploymentManager.Agent.csproj" />
   <Project Path="DeploymentManager.Api.Tests/DeploymentManager.Api.Tests.csproj" />
   <Project Path="DeploymentManager.Api/DeploymentManager.Api.csproj" />

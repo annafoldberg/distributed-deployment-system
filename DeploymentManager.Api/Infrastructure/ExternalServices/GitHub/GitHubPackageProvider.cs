@@ -95,16 +95,16 @@ public class GitHubPackageProvider : IPackageProvider
         return await response.Content.ReadFromJsonAsync<GitHubReleaseDto>(ct);
     }
 
-    private async Task<Stream?> DownloadAssetAsync(string downloadUri, CancellationToken ct)
+    private async Task<Stream?> DownloadAssetAsync(string downloadUrl, CancellationToken ct)
     {
         // ResponseHeadersRead avoids buffering large responses into memory
-        using var response = await _httpClient.GetAsync(downloadUri, HttpCompletionOption.ResponseHeadersRead, ct);
+        using var response = await _httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, ct);
         
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError(
-                "GitHub asset download failed for {DownloadUri} with status code {StatusCode}",
-                downloadUri,
+                "GitHub asset download failed for {DownloadUrl} with status code {StatusCode}",
+                downloadUrl,
                 response.StatusCode);
             return null;
         }

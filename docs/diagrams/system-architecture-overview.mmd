@@ -1,0 +1,14 @@
+flowchart TB
+    CLI["Deployment Manager CLI"]
+    Agent["Deployment Manager Agent"]
+
+    API["Deployment Manager API"]
+
+    DB[("Deployment Manager Database")]
+    GitHub["GitHub Releases"]
+
+    CLI -->|"manage customer deployments"| API
+    Agent -->|"request installation package"| API
+
+    API -->|"manage deployment data"| DB
+    API -->|"fetch release package"| GitHub
