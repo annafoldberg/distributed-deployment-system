@@ -76,19 +76,19 @@ Background worker that periodically checks for changes in the customer's desired
 ## CI/CD Pipeline
 Each application has its own CI/CD pipeline.
 
-### API
+### Deployment Manager API
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/api-ci-cd-dark.png">
   <img alt="API CI/CD Pipeline" src="docs/diagrams/api-ci-cd-light.png">
 </picture>
 
-### CLI
+### Deployment Manager CLI
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/cli-ci-cd-dark.png">
   <img alt="CLI CI/CD Pipeline" src="docs/diagrams/cli-ci-cd-light.png">
 </picture>
 
-### Agent
+### Deployment Manager Agent
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/agent-ci-cd-dark.png">
   <img alt="Agent CI/CD Pipeline" src="docs/diagrams/agent-ci-cd-light.png">
@@ -98,7 +98,7 @@ Each application has its own CI/CD pipeline.
 ## Local Deployment
 > This setup has been developed and tested on macOS. Some commands may differ on other operating systems.
 
-### Kubernetes
+### Deployment Manager API & Database
 
 #### Kubernetes Network Architecture
 <picture>
@@ -221,7 +221,7 @@ kind delete cluster
 
 > Any MSSQL data will be lost once the cluster is deleted
 
-### Agent
+### Deployment Manager Agent
 #### Configure Environment Variables
 ```bash
 export AgentIdentity__ApiKey="<api-key>"
