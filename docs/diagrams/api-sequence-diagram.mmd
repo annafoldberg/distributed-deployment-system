@@ -1,0 +1,62 @@
+sequenceDiagram
+    participant Agent
+    participant DeploymentsController
+    participant Validator as GetInstallationPackageQueryValidator
+    participant Handler as GetInstallationPackageQueryHandler
+    participant DbContext as DeploymentManagerDbContext
+    participant Provider as GitHubPackageProvider
+    participant GitHubAPI
+
+    Agent->>DeploymentsController: GET /deployments/{agentId}/package
+    DeploymentsController->>Validator: Validate(query)
+
+    alt validation fails
+        Validator-->>DeploymentsController: validation errors
+        DeploymentsController-->>Agent: 400 Bad Request
+    else validation succeeds
+        Validator-->>DeploymentsController: valid
+        DeploymentsController->>Handler: Handle(query)
+
+        Handler->>DbContext: Get agent with customer and desired release
+        DbContext-->>Handler: Agent?
+
+        alt agent not found
+            Handler-->>DeploymentsController: Result.Fail(AgentNotFoundError)
+            DeploymentsController-->>Agent: 404 Not Found
+        else agent found
+            Handler->>Handler: Read platform, customer and desired release
+
+            alt desired release not set
+                Handler-->>DeploymentsController: Result.Fail(DesiredReleaseNotSetError)
+                DeploymentsController-->>Agent: 400 Bad Request
+            else desired release set
+                Handler->>DbContext: Get installation with current release
+                DbContext-->>Handler: Installation?
+
+                Handler->>Handler: Compare current release with desired release
+
+                alt desired version already installed
+                    Handler-->>DeploymentsController: Result.Fail(NoUpdateRequiredError)
+                    DeploymentsController-->>Agent: 400 Bad Request
+                else update required
+                    Handler->>Provider: FetchPackageAsync(platform, desiredVersion)
+
+                    Provider->>GitHubAPI: Get release metadata
+                    GitHubAPI-->>Provider: Release metadata
+
+                    Provider->>GitHubAPI: Download matching asset
+                    GitHubAPI-->>Provider: Zip stream
+
+                    alt package not found
+                        Provider-->>Handler: null
+                        Handler-->>DeploymentsController: Result.Fail(PackageNotFoundError)
+                        DeploymentsController-->>Agent: 404 Not Found
+                    else package found
+                        Provider-->>Handler: InstallationPackageDto
+                        Handler-->>DeploymentsController: Result.Ok(package)
+                        DeploymentsController-->>Agent: 200 OK (file)
+                    end
+                end
+            end
+        end
+    end

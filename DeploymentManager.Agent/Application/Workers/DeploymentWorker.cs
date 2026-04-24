@@ -7,13 +7,13 @@ namespace DeploymentManager.Agent.Workers;
 /// </summary>
 public sealed class DeploymentWorker : BackgroundService
 {
-    private readonly ILogger<DeploymentWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<DeploymentWorker> _logger;
 
-    public DeploymentWorker(ILogger<DeploymentWorker> logger, IServiceScopeFactory scopeFactory)
+    public DeploymentWorker(IServiceScopeFactory scopeFactory, ILogger<DeploymentWorker> logger)
     {
-        _logger = logger;
         _scopeFactory = scopeFactory;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

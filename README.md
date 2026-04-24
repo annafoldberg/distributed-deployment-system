@@ -7,7 +7,10 @@ The system consists of three main applications:
 - **Deployment Manager CLI:** Used internally to inspect and update deployments
 - **Deployment Manager Agent:** Runs in the customer environment and installs the desired version when a change is detected
 
-> This setup has been developed and tested on macOS. Some commands may differ on other operating systems.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/system-architecture-overview-dark.png">
+  <img alt="System Architecture Overview" src="docs/diagrams/system-architecture-overview-light.png">
+</picture>
 
 ---
 ## Systems
@@ -15,7 +18,95 @@ The system consists of three main applications:
 ### Deployment Manager API
 API responsible for managing deployment state and coordinating release deployments. Exposes endpoints for reading and updating each customer's current and desired software version, and retrieves new releases from GitHub when requested.
 
-#### Configuration
+#### API Contract
+##### Endpoints
+```https
+GET /api/Deployments/{agentId}/package
+```
+
+##### Parameters
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| agentId | uuid | Public identifier of the agent |
+
+##### Responses
+| Status | Description |
+|--------|-------------|
+| 200 OK | Returns installation package |
+| 400 Bad Request | Invalid request, no update required, or no desired version set |
+| 404 Not Found | Agent or package not found |
+
+#### Feature: Retrieve Installation Package
+> The following diagrams show only components relevant to the feature. Framework components are omitted for clarity.
+
+##### Design
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/api-design-class-diagram-dark.png">
+  <img alt="API Design Class Diagram" src="docs/diagrams/api-design-class-diagram-light.png">
+</picture>
+
+##### Flow
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/api-sequence-diagram-dark.png">
+  <img alt="API Sequence Diagram" src="docs/diagrams/api-sequence-diagram-light.png">
+</picture>
+
+### Deployment Manager CLI
+CLI used internally to manage deployments. Shows the current and desired software version for each customer and allows update of desired version.
+
+### Deployment Manager Agent
+Background worker that periodically checks for changes in the customer's desired software version, comparing it with the currently installed version, and when mismatch is detected, retrieves, downloads and installs a new release.
+
+#### Feature: Retrieve Installation Package
+> The following diagrams show only components relevant to the feature. Framework components are omitted for clarity.
+
+##### Design
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/agent-design-class-diagram-dark.png">
+  <img alt="Agent Design Class Diagram" src="docs/diagrams/agent-design-class-diagram-light.png">
+</picture>
+
+##### Flow
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/agent-sequence-diagram-dark.png">
+  <img alt="Agent Sequence Diagram" src="docs/diagrams/agent-sequence-diagram-light.png">
+</picture>
+
+---
+## CI/CD Pipeline
+Each application has its own CI/CD pipeline.
+
+### API
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/api-ci-cd-dark.png">
+  <img alt="API CI/CD Pipeline" src="docs/diagrams/api-ci-cd-light.png">
+</picture>
+
+### CLI
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/cli-ci-cd-dark.png">
+  <img alt="CLI CI/CD Pipeline" src="docs/diagrams/cli-ci-cd-light.png">
+</picture>
+
+### Agent
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/agent-ci-cd-dark.png">
+  <img alt="Agent CI/CD Pipeline" src="docs/diagrams/agent-ci-cd-light.png">
+</picture>
+
+---
+## Local Deployment
+> This setup has been developed and tested on macOS. Some commands may differ on other operating systems.
+
+### Kubernetes
+
+#### Kubernetes Network Architecture
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/kubernetes-network-architecture-dark.png">
+  <img alt="Kubernetes Network Architecture" src="docs/diagrams/kubernetes-network-architecture-light.png">
+</picture>
+
+#### DNS Configuration
 Add local DNS entry for deployment-manager.local:
 1. Open the hosts file:
    ```bash
@@ -59,7 +150,7 @@ Add local DNS entry for deployment-manager.local:
 #### Configure Secrets
 Create `secret.yaml` from each `secret.yaml.tpl` and replace placeholder values with real secrets.
 
-#### Run Kubernetes Cluster Locally
+#### Run Local Kubernetes Cluster
 > Commands must be executed from the repository root.  
 > Docker Desktop must be running as kind relies on Docker to create the cluster.
 1. Create the Kubernetes cluster:
@@ -130,11 +221,17 @@ kind delete cluster
 
 > Any MSSQL data will be lost once the cluster is deleted
 
-### Deployment Manager CLI
-CLI used internally to manage deployments. Shows the current and desired software version for each customer and allows update of desired version.
+### Agent
+#### Configure Environment Variables
+```bash
+export AgentIdentity__ApiKey="<api-key>"
+```
 
-### Deployment Manager Agent
-Background worker periodically checking for changes in customer's desired software version, comparing it with the currently installed version, and when mismatch is detected, downloads and installs new release.
+#### Run Agent
+> Command must be executed from the repository root.  
+```bash
+dotnet run --project DeploymentManager.Agent/DeploymentManager.Agent.csproj
+```
 
 ---
 ## Related repository

@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant DeploymentWorker
+    participant DeploymentOrchestrator
+    participant ApiClient as DeploymentManagerApiClient
+    participant API as DeploymentManagerAPI
+
+    loop every 2 minutes
+        DeploymentWorker->>DeploymentOrchestrator: ExecuteAsync()
+
+        DeploymentOrchestrator->>ApiClient: GetInstallationPackageAsync()
+        ApiClient->>API: GET /deployments/{agentId}/package
+
+        alt request failed
+            API-->>ApiClient: error response
+            ApiClient-->>DeploymentOrchestrator: null
+            DeploymentOrchestrator-->>DeploymentWorker: RetrievalFailed
+        else request succeeded
+            API-->>ApiClient: 200 OK (file)
+            ApiClient-->>DeploymentOrchestrator: InstallationPackage
+
+            DeploymentOrchestrator-->>DeploymentWorker: Succeeded
+        end
+    end
