@@ -11,6 +11,7 @@ on:
       - dev
     paths:
       - 'DeploymentManager.Agent/**'
+      - 'DeploymentManager.Agent.Tests/**'
       - '.github/workflows/agent-ci.yml'
   pull_request:
     branches:
@@ -18,6 +19,7 @@ on:
       - dev
     paths:
       - 'DeploymentManager.Agent/**'
+      - 'DeploymentManager.Agent.Tests/**'
       - '.github/workflows/agent-ci.yml'
 
 permissions:
@@ -40,6 +42,9 @@ jobs:
 
       - name: Restore
         run: dotnet restore ./DeploymentManager.Agent/DeploymentManager.Agent.csproj -r ${{ matrix.rid }}
+
+      - name: Test
+        run: dotnet test ./DeploymentManager.Agent.Tests/DeploymentManager.Agent.Tests.csproj
 
       - name: Read version from project
         id: version
@@ -79,6 +84,7 @@ jobs:
 # Sources:
 # Workflow syntax: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
 # .NET RID: https://learn.microsoft.com/en-us/dotnet/core/rid-catalog
+# Test: https://docs.github.com/en/actions/tutorials/build-and-test-code/net
 # Self-contained deployment: https://learn.microsoft.com/en-us/dotnet/core/deploying/?pivots=cli
 # Checkout action: https://github.com/marketplace/actions/checkout?version=v6.0.2
 # Setup .NET action: https://github.com/marketplace/actions/setup-net-core-sdk?version=v5.2.0

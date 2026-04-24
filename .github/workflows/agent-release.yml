@@ -33,6 +33,9 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Test
+        run: dotnet test ./DeploymentManager.Agent.Tests/DeploymentManager.Agent.Tests.csproj
+
       - name: Read version from project
         id: version
         run: |
@@ -60,6 +63,7 @@ jobs:
 # Sources:
 # Workflow syntax: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
 # .NET RID: https://learn.microsoft.com/en-us/dotnet/core/rid-catalog
+# Test: https://docs.github.com/en/actions/tutorials/build-and-test-code/net
 # Version from msbuild: https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-command-line-reference?view=visualstudio
 # Output parameters: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#setting-an-output-parameter
 # Checkout action: https://github.com/marketplace/actions/checkout?version=v6.0.2
