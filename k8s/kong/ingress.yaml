@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: deployment-manager-ingress
+  namespace: deployment-manager
+  annotations:
+    konghq.com/protocols: "https"
+spec:
+  ingressClassName: kong
+  tls:
+  - hosts:
+      - deployment-manager.local
+    secretName: kong-ingress-tls
+  rules:
+  - host: deployment-manager.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api
+            port:
+              number: 8080
+
+# Sources:
+# Ingress documentation: https://kubernetes.io/docs/concepts/services-networking/ingress/
+# Inspired by previous personal ingress:
+# https://github.com/Team-2-Devs/infra-core/blob/main/k8s/helm/kong/ingress-graphql.yaml

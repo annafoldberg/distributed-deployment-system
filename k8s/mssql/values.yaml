@@ -1,0 +1,6 @@
+configuration:
+  acceptEula: true
+  existingSecret: "mssql-secret"
+  existingSecretKey: "saPassword"
+
+# Source: https://artifacthub.io/packages/helm/emberstack/mssql

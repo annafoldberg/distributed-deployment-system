@@ -1,0 +1,19 @@
+[req]
+default_bits        = 2048
+prompt              = no
+default_md          = sha256
+req_extensions      = req_ext
+distinguished_name = req_distinguished_name
+
+[req_distinguished_name]
+CN = deployment-manager.local
+
+[req_ext]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = deployment-manager.local
+
+# Sources:
+# OpenSSL req: https://docs.openssl.org/master/man1/openssl-req
+# Example configuration: https://medium.com/@spawnrider/creating-a-multi-domain-san-ssl-certificate-using-openssl-2a3865ccb62a
