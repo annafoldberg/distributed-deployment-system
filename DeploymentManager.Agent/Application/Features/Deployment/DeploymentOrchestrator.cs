@@ -1,4 +1,5 @@
 using DeploymentManager.Agent.Application.Features.Deployment.Interfaces;
+using DeploymentManager.Agent.Application.Features.Deployment.Results;
 
 namespace DeploymentManager.Agent.Application.Features.Deployment;
 
@@ -8,10 +9,12 @@ namespace DeploymentManager.Agent.Application.Features.Deployment;
 public sealed class DeploymentOrchestrator
 {
     private readonly IDeploymentManagerApiClient _apiClient;
+    private readonly IPackageInstaller _packageInstaller;
     private readonly ILogger<DeploymentOrchestrator> _logger;
-    public DeploymentOrchestrator(IDeploymentManagerApiClient apiClient, ILogger<DeploymentOrchestrator> logger)
+    public DeploymentOrchestrator(IDeploymentManagerApiClient apiClient, IPackageInstaller packageInstaller, ILogger<DeploymentOrchestrator> logger)
     {
         _apiClient = apiClient;
+        _packageInstaller = packageInstaller;
         _logger = logger;
     }
     
@@ -25,6 +28,13 @@ public sealed class DeploymentOrchestrator
         {
             _logger.LogWarning("Failed to retrieve installation package.");
             return DeploymentResult.RetrievalFailed;
+        }
+
+        var installationResult = await _packageInstaller.InstallPackageAsync(installationPackage, ct);
+        if (installationResult == InstallationResult.Failed)
+        {
+            _logger.LogWarning("Failed to install package.");
+            return DeploymentResult.InstallationFailed;
         }
 
         return DeploymentResult.Succeeded;
