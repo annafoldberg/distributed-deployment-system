@@ -6,7 +6,9 @@ namespace DeploymentManager.Api.Domain.Entities;
 public class Customer
 {
     public int Id { get; set; }
+    public Guid PublicId { get; set; }
     public string CompanyName { get; set; } = string.Empty;
     public int? DesiredReleaseId { get; set; }
     public Release? DesiredRelease { get; set; }
+    public List<Agent> Agents { get; set; } = [];
 }

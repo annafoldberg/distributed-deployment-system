@@ -11,4 +11,5 @@ public class Agent
     public string Platform { get; set; } = string.Empty;
     public int CustomerId { get; set; }
     public Customer Customer { get; set; } = null!;
+    public Installation? Installation { get; set; }
 }

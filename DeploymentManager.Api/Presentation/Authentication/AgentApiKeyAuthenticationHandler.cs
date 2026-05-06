@@ -42,9 +42,7 @@ public sealed class AgentApiKeyAuthenticationHandler : AuthenticationHandler<Aut
     {
         // Check API key header
         if (!Request.Headers.TryGetValue("X-API-KEY", out var apiKey))
-        {
             return AuthenticateResult.NoResult();
-        }
 
         // Check agent's public ID from agentId route value
         if (!Request.RouteValues.TryGetValue("agentId", out var agentId) ||

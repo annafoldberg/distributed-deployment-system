@@ -13,7 +13,12 @@ public static class DeploymentManagerDbContextSeeder
     /// <summary>
     /// Ensures required entities exist in the database and creates them if missing.
     /// </summary>
-    public static async Task SeedAsync(DbContext context, AgentSeedOptions agentSeedOptions, IPasswordHasher<Agent> passwordHasher, CancellationToken ct = default)
+    public static async Task SeedAsync(
+        DbContext context,
+        CustomerSeedOptions customerSeedOptions,
+        AgentSeedOptions agentSeedOptions,
+        IPasswordHasher<Agent> passwordHasher,
+        CancellationToken ct = default)
     {
         // Seed release
         var release = await context.Set<Release>().FirstOrDefaultAsync(r => r.Version == "1.0.0", ct);
@@ -29,14 +34,15 @@ public static class DeploymentManagerDbContextSeeder
         }
 
         // Seed customer
-        var companyName = "Demo Company";
-        var customer = await context.Set<Customer>().FirstOrDefaultAsync(c => c.CompanyName == companyName, ct);
+        var customer = await context.Set<Customer>()
+            .FirstOrDefaultAsync(c => c.PublicId == customerSeedOptions.PublicId, ct);
 
         if (customer is null)
         {
             customer = new Customer
             {
-                CompanyName = companyName,
+                PublicId = customerSeedOptions.PublicId,
+                CompanyName = customerSeedOptions.CompanyName,
                 DesiredRelease = release
             };
 
@@ -62,7 +68,6 @@ public static class DeploymentManagerDbContextSeeder
                 context.Set<Agent>().Add(agent);
             }
         }
-
         await context.SaveChangesAsync(ct);
     }
 }

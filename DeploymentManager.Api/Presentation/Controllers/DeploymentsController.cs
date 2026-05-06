@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using DeploymentManager.Api.Application.Features.InstallationPackages.Queries;
-using DeploymentManager.Api.Presentation.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using DeploymentManager.Api.Presentation.Extensions;
 
@@ -26,12 +25,12 @@ public class DeploymentsController : ControllerBase
     /// </summary>
     /// <param name="agentId">Agent identifier.</param>
     /// <returns>The installation package file if retrieval succeeds, otherwise HTTP error response.</returns>
-    [Authorize(AuthenticationSchemes = AgentApiKeyAuthenticationHandler.SchemeName)]
+    [Authorize(Policy = "Agent")]
     [HttpGet("{agentId}/package")]
-    public async Task<IActionResult> GetInstallationPackage([FromRoute] Guid agentId)
+    public async Task<IActionResult> GetInstallationPackage([FromRoute] Guid agentId, CancellationToken ct)
     {
         var query = new GetInstallationPackageQuery(agentId);
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query, ct);
         
         if (result.IsFailed) return result.ToErrorActionResult();
 

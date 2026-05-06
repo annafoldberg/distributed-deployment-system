@@ -71,6 +71,9 @@ namespace DeploymentManager.Api.Migrations
                     b.Property<int?>("DesiredReleaseId")
                         .HasColumnType("int");
 
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyName")
@@ -129,7 +132,7 @@ namespace DeploymentManager.Api.Migrations
             modelBuilder.Entity("DeploymentManager.Api.Domain.Entities.Agent", b =>
                 {
                     b.HasOne("DeploymentManager.Api.Domain.Entities.Customer", "Customer")
-                        .WithMany()
+                        .WithMany("Agents")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -150,7 +153,7 @@ namespace DeploymentManager.Api.Migrations
             modelBuilder.Entity("DeploymentManager.Api.Domain.Entities.Installation", b =>
                 {
                     b.HasOne("DeploymentManager.Api.Domain.Entities.Agent", "Agent")
-                        .WithOne()
+                        .WithOne("Installation")
                         .HasForeignKey("DeploymentManager.Api.Domain.Entities.Installation", "AgentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -164,6 +167,16 @@ namespace DeploymentManager.Api.Migrations
                     b.Navigation("Agent");
 
                     b.Navigation("Release");
+                });
+
+            modelBuilder.Entity("DeploymentManager.Api.Domain.Entities.Agent", b =>
+                {
+                    b.Navigation("Installation");
+                });
+
+            modelBuilder.Entity("DeploymentManager.Api.Domain.Entities.Customer", b =>
+                {
+                    b.Navigation("Agents");
                 });
 #pragma warning restore 612, 618
         }

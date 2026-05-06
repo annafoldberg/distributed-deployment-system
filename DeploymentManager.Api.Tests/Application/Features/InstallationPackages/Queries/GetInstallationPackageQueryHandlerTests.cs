@@ -36,10 +36,12 @@ public sealed class GetInstallationPackageQueryHandlerTests
         (var agent, var installation) = CreateDatabaseEntities(agentId, "1.0.0", "2.0.0");
         SetupDatabaseContext(agent, installation);
 
-        var package = new InstallationPackageDto(
-            new MemoryStream(),
-            "application/zip",
-            "app-osx-arm64.zip");
+        var package = new InstallationPackageDto
+        {
+            Content = new MemoryStream(),
+            ContentType = "application/zip",
+            FileName = "app-osx-arm64.zip"
+        };
 
         _mockProvider.Setup(p =>
             p.FetchPackageAsync("osx-arm64", "2.0.0", It.IsAny<CancellationToken>()))
@@ -66,10 +68,12 @@ public sealed class GetInstallationPackageQueryHandlerTests
         (var agent, _) = CreateDatabaseEntities(agentId, "1.0.0", "2.0.0");
         SetupDatabaseContext(agent);
 
-        var package = new InstallationPackageDto(
-            new MemoryStream(),
-            "application/zip",
-            "app-osx-arm64.zip");
+        var package = new InstallationPackageDto
+        {
+            Content = new MemoryStream(),
+            ContentType = "application/zip",
+            FileName = "app-osx-arm64.zip"
+        };
 
         _mockProvider.Setup(p =>
             p.FetchPackageAsync("osx-arm64", "2.0.0", It.IsAny<CancellationToken>()))
