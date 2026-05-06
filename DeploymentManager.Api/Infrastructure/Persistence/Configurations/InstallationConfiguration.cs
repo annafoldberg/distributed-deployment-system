@@ -17,7 +17,7 @@ public sealed class InstallationConfiguration : IEntityTypeConfiguration<Install
         // One-to-one relationship between installation and agent.
         // Disable cascade deletes to prevent an agent from being deleted if it is linked to an installation.
         builder.HasOne(i => i.Agent)
-            .WithOne()
+            .WithOne(a => a.Installation)
             .HasForeignKey<Installation>(i => i.AgentId)
             .OnDelete(DeleteBehavior.Restrict);
 

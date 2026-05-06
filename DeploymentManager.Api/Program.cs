@@ -33,6 +33,16 @@ builder.Services
         "Database configuration is incomplete.")
     .ValidateOnStart();
 
+// Configure customer seeding
+builder.Services
+    .AddOptions<CustomerSeedOptions>()
+    .Bind(builder.Configuration.GetSection(CustomerSeedOptions.SectionName))
+    .Validate(options =>
+        options.PublicId != Guid.Empty &&
+        !string.IsNullOrWhiteSpace(options.CompanyName),
+        "Customer seeding configuration is incomplete.")
+    .ValidateOnStart();
+
 // Configure agent seeding
 builder.Services
     .AddOptions<AgentSeedOptions>()
@@ -49,10 +59,23 @@ builder.Services
 // Register password hasher for agent API keys
 builder.Services.AddScoped<IPasswordHasher<Agent>, PasswordHasher<Agent>>();
 
+// Configure CLI identity
+builder.Services
+    .AddOptions<CliIdentityOptions>()
+    .Bind(builder.Configuration.GetSection(CliIdentityOptions.SectionName))
+    .Validate(options =>
+        !string.IsNullOrWhiteSpace(options.ApiKeyHash),
+        "CLI identity configuration is incomplete.")
+    .ValidateOnStart();
+
+// Register password hasher for CLI API keys
+builder.Services.AddScoped<IPasswordHasher<CliApiKeyAuthenticationHandler>, PasswordHasher<CliApiKeyAuthenticationHandler>>();
+
 // Register and seed DbContext
 builder.Services.AddDbContext<DeploymentManagerDbContext>((serviceProvider, options) =>
 {
     var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+    var customerSeedOptions = serviceProvider.GetRequiredService<IOptions<CustomerSeedOptions>>().Value;
     var agentSeedOptions = serviceProvider.GetRequiredService<IOptions<AgentSeedOptions>>().Value;
     var passwordHasher = serviceProvider.GetRequiredService<IPasswordHasher<Agent>>();
 
@@ -68,12 +91,12 @@ builder.Services.AddDbContext<DeploymentManagerDbContext>((serviceProvider, opti
     options.UseSqlServer(connectionString)
         .UseSeeding((context, _) =>
         {
-            DeploymentManagerDbContextSeeder.SeedAsync(context, agentSeedOptions, passwordHasher, CancellationToken.None)
+            DeploymentManagerDbContextSeeder.SeedAsync(context, customerSeedOptions, agentSeedOptions, passwordHasher, CancellationToken.None)
                 .GetAwaiter().GetResult();
         })
         .UseAsyncSeeding(async (context, _, ct) =>
         {
-            await DeploymentManagerDbContextSeeder.SeedAsync(context, agentSeedOptions, passwordHasher, ct);
+            await DeploymentManagerDbContextSeeder.SeedAsync(context, customerSeedOptions, agentSeedOptions, passwordHasher, ct);
         });
 });
 builder.Services.AddScoped<IDeploymentManagerDbContext>(sp => sp.GetRequiredService<DeploymentManagerDbContext>());
@@ -112,16 +135,28 @@ builder.Services.AddHealthChecks()
 
 // Register authentication scheme
 builder.Services
-    .AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = AgentApiKeyAuthenticationHandler.SchemeName;
-        options.DefaultChallengeScheme = AgentApiKeyAuthenticationHandler.SchemeName;
-    })
+    .AddAuthentication()
     .AddScheme<AuthenticationSchemeOptions, AgentApiKeyAuthenticationHandler>(
         AgentApiKeyAuthenticationHandler.SchemeName,
-        _ => {});
+        _ => { })
+    .AddScheme<AuthenticationSchemeOptions, CliApiKeyAuthenticationHandler>(
+        CliApiKeyAuthenticationHandler.SchemeName,
+        _ => { });
 
-builder.Services.AddAuthorization();
+// Register named policies
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Agent", policy =>
+    {
+        policy.AuthenticationSchemes.Add(AgentApiKeyAuthenticationHandler.SchemeName);
+        policy.RequireAuthenticatedUser();
+    });
+    options.AddPolicy("Cli", policy =>
+    {
+        policy.AuthenticationSchemes.Add(CliApiKeyAuthenticationHandler.SchemeName);
+        policy.RequireAuthenticatedUser();
+    });
+});
 
 // Source: https://github.com/LuckyPennySoftware/MediatR
 builder.Services.AddMediatR(config =>

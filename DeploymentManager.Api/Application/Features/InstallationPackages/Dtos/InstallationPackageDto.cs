@@ -5,14 +5,7 @@ namespace DeploymentManager.Api.Application.Features.InstallationPackages.Dtos;
 /// </summary>
 public sealed class InstallationPackageDto
 {
-    public Stream Content { get; }
-    public string ContentType { get; }
-    public string FileName { get; }
-
-    public InstallationPackageDto(Stream content, string contentType, string fileName)
-    {
-        Content = content;
-        ContentType = contentType;
-        FileName = fileName;
-    }
+    public Stream Content { get; init; }
+    public string ContentType { get; init; }
+    public string FileName { get; init; }
 }
