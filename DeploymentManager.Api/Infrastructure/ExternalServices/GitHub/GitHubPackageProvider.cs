@@ -59,7 +59,12 @@ public class GitHubPackageProvider : IPackageProvider
         var content = await DownloadAssetAsync(asset.BrowserDownloadUrl, ct);
         if (content == null) return null;
 
-        return new InstallationPackageDto(content, asset.ContentType, asset.Name);
+        return new InstallationPackageDto
+        {
+            Content = content,
+            ContentType = asset.ContentType,
+            FileName = asset.Name
+        };
     }
 
     /// <summary>

@@ -17,7 +17,7 @@ public sealed class AgentConfiguration : IEntityTypeConfiguration<Agent>
         // One-to-many relationship where a customer can have multiple agents.
         // Disable cascade deletes to prevent customers from being deleted if they are linked to an agent.
         builder.HasOne(a => a.Customer)
-            .WithMany()
+            .WithMany(c => c.Agents)
             .HasForeignKey(a => a.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
             
