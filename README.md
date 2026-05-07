@@ -4,7 +4,7 @@ A distributed system for automated deployment of software releases to customers.
 ## Architecture Overview
 The system consists of three main applications:
 - **Deployment Manager API:** Stores and manages deployments
-- **Deployment Manager CLI:** Used internally to inspect and update deployments
+- **Deployment Manager TUI:** Used internally to inspect and update deployments
 - **Deployment Manager Agent:** Runs in the customer environment and installs the desired version when a change is detected
 
 <picture>
@@ -51,8 +51,8 @@ GET /api/Deployments/{agentId}/package
   <img alt="API Sequence Diagram" src="docs/diagrams/api-sequence-diagram-light.png">
 </picture>
 
-### Deployment Manager CLI
-CLI used internally to manage deployments. Shows the current and desired software version for each customer and allows update of desired version.
+### Deployment Manager TUI
+Console application used internally to monitor and manage deployments. Shows the current and desired software version for each customer and allows update of desired version.
 
 ### Deployment Manager Agent
 Background worker that periodically checks for changes in the customer's desired software version, comparing it with the currently installed version, and when mismatch is detected, retrieves, downloads and installs a new release.
@@ -82,10 +82,10 @@ Each application has its own CI/CD pipeline.
   <img alt="API CI/CD Pipeline" src="docs/diagrams/api-ci-cd-light.png">
 </picture>
 
-### Deployment Manager CLI
+### Deployment Manager TUI
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/cli-ci-cd-dark.png">
-  <img alt="CLI CI/CD Pipeline" src="docs/diagrams/cli-ci-cd-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/tui-ci-cd-dark.png">
+  <img alt="TUI CI/CD Pipeline" src="docs/diagrams/tui-ci-cd-light.png">
 </picture>
 
 ### Deployment Manager Agent
