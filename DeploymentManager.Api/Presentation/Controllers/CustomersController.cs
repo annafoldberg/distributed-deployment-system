@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using DeploymentManager.Api.Application.Features.Customers.Queries;
 using Microsoft.AspNetCore.Authorization;
 using DeploymentManager.Api.Presentation.Extensions;
+using DeploymentManager.Api.Application.Features.Customers.Commands;
 
 namespace DeploymentManager.Api.Presentation.Controllers;
 
@@ -24,7 +25,7 @@ public class CustomersController : ControllerBase
     /// Retrieves customers.
     /// </summary>
     /// <returns>All customers if retrieval succeeds, otherwise HTTP error response.</returns>
-    [Authorize(Policy = "Cli")]
+    [Authorize(Policy = "Tui")]
     [HttpGet]
     public async Task<IActionResult> GetCustomers(CancellationToken ct)
     {
@@ -37,14 +38,34 @@ public class CustomersController : ControllerBase
     /// <summary>
     /// Retrieves a single customer.
     /// </summary>
-    /// <param name="customerId">Customer identifier.</param>
+    /// <param name="customerId">Identifier of the customer to retrieve.</param>
     /// <returns>The customer if retrieval succeeds, otherwise HTTP error response.</returns>
-    [Authorize(Policy = "Cli")]
+    [Authorize(Policy = "Tui")]
     [HttpGet("{customerId}")]
     public async Task<IActionResult> GetCustomerById([FromRoute] Guid customerId, CancellationToken ct)
     {
         var query = new GetCustomerByIdQuery(customerId);
         var result = await _mediator.Send(query, ct);
+        
+        return result.ToActionResult();
+    }
+
+    /// <summary>
+    /// Updates the desired version for a customer.
+    /// </summary>
+    /// <param name="customerId">Identifier of the customer to update.</param>
+    /// <param name="desiredVersion">Desired version to set for the customer.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Success if the desired version is updated, otherwise HTTP error response.</returns>
+    [Authorize(Policy = "Tui")]
+    [HttpPatch("{customerId}/desired-version")]
+    public async Task<IActionResult> UpdateDesiredVersion(
+        [FromRoute] Guid customerId,
+        [FromBody] string desiredVersion,
+        CancellationToken ct)
+    {
+        var command = new UpdateDesiredVersionCommand(customerId, desiredVersion);
+        var result = await _mediator.Send(command, ct);
         
         return result.ToActionResult();
     }

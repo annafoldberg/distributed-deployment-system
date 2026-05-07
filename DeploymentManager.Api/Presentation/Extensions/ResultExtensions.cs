@@ -12,6 +12,17 @@ public static class ResultExtensions
 {
     /// <summary>
     /// Converts result into HTTP action result.
+    /// Returns 200 OK on success, otherwise maps errors to HTTP responses.
+    /// </summary>
+    public static IActionResult ToActionResult(this Result result)
+    {
+        if (result.IsSuccess) return new OkResult();
+        
+        return result.ToErrorActionResult();
+    }
+
+    /// <summary>
+    /// Converts result into HTTP action result.
     /// Returns 200 OK with the value on success, otherwise maps errors to HTTP responses.
     /// </summary>
     public static IActionResult ToActionResult<T>(this Result<T> result)
@@ -24,12 +35,18 @@ public static class ResultExtensions
     /// <summary>
     /// Converts failed result into HTTP action result based on application error.
     /// </summary>
-    public static IActionResult ToErrorActionResult<T>(this Result<T> result)
+    public static IActionResult ToErrorActionResult(this ResultBase result)
     {
         var errorMessages = result.Errors.Select(e => e.Message);
 
         if (result.HasError<CustomerNotFoundError>())
             return new NotFoundObjectResult(errorMessages);
+
+        if (result.HasError<ReleaseNotFoundError>())
+            return new NotFoundObjectResult(errorMessages);
+
+        if (result.HasError<DesiredVersionAlreadySetError>())
+            return new BadRequestObjectResult(errorMessages);
 
         if (result.HasError<AgentNotFoundError>())
             return new NotFoundObjectResult(errorMessages);

@@ -1,5 +1,5 @@
 flowchart TB
-    CLI["Deployment Manager CLI"]
+    TUI["Deployment Manager TUI"]
     Agent["Deployment Manager Agent"]
 
     API["Deployment Manager API"]
@@ -7,7 +7,7 @@ flowchart TB
     DB[("Deployment Manager Database")]
     GitHub["GitHub Releases"]
 
-    CLI -->|"manage customer deployments"| API
+    TUI -->|"manage customer deployments"| API
     Agent -->|"request installation package"| API
 
     API -->|"manage deployment data"| DB

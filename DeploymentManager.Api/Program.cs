@@ -59,17 +59,17 @@ builder.Services
 // Register password hasher for agent API keys
 builder.Services.AddScoped<IPasswordHasher<Agent>, PasswordHasher<Agent>>();
 
-// Configure CLI identity
+// Configure TUI identity
 builder.Services
-    .AddOptions<CliIdentityOptions>()
-    .Bind(builder.Configuration.GetSection(CliIdentityOptions.SectionName))
+    .AddOptions<TuiIdentityOptions>()
+    .Bind(builder.Configuration.GetSection(TuiIdentityOptions.SectionName))
     .Validate(options =>
         !string.IsNullOrWhiteSpace(options.ApiKeyHash),
-        "CLI identity configuration is incomplete.")
+        "TUI identity configuration is incomplete.")
     .ValidateOnStart();
 
-// Register password hasher for CLI API keys
-builder.Services.AddScoped<IPasswordHasher<CliApiKeyAuthenticationHandler>, PasswordHasher<CliApiKeyAuthenticationHandler>>();
+// Register password hasher for TUI API keys
+builder.Services.AddScoped<IPasswordHasher<TuiApiKeyAuthenticationHandler>, PasswordHasher<TuiApiKeyAuthenticationHandler>>();
 
 // Register and seed DbContext
 builder.Services.AddDbContext<DeploymentManagerDbContext>((serviceProvider, options) =>
@@ -139,8 +139,8 @@ builder.Services
     .AddScheme<AuthenticationSchemeOptions, AgentApiKeyAuthenticationHandler>(
         AgentApiKeyAuthenticationHandler.SchemeName,
         _ => { })
-    .AddScheme<AuthenticationSchemeOptions, CliApiKeyAuthenticationHandler>(
-        CliApiKeyAuthenticationHandler.SchemeName,
+    .AddScheme<AuthenticationSchemeOptions, TuiApiKeyAuthenticationHandler>(
+        TuiApiKeyAuthenticationHandler.SchemeName,
         _ => { });
 
 // Register named policies
@@ -151,9 +151,9 @@ builder.Services.AddAuthorization(options =>
         policy.AuthenticationSchemes.Add(AgentApiKeyAuthenticationHandler.SchemeName);
         policy.RequireAuthenticatedUser();
     });
-    options.AddPolicy("Cli", policy =>
+    options.AddPolicy("Tui", policy =>
     {
-        policy.AuthenticationSchemes.Add(CliApiKeyAuthenticationHandler.SchemeName);
+        policy.AuthenticationSchemes.Add(TuiApiKeyAuthenticationHandler.SchemeName);
         policy.RequireAuthenticatedUser();
     });
 });
