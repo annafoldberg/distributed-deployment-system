@@ -3,5 +3,5 @@
   <Project Path="DeploymentManager.Agent/DeploymentManager.Agent.csproj" />
   <Project Path="DeploymentManager.Api.Tests/DeploymentManager.Api.Tests.csproj" />
   <Project Path="DeploymentManager.Api/DeploymentManager.Api.csproj" />
-  <Project Path="DeploymentManager.Cli/DeploymentManager.Cli.csproj" />
+  <Project Path="DeploymentManager.Tui/DeploymentManager.Tui.csproj" />
 </Solution>

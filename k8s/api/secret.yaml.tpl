@@ -5,9 +5,15 @@ metadata:
   namespace: deployment-manager
 stringData:
   Database__Password: "<db-password>"
-  CliIdentity__ApiKeyHash: "<hashed-api-key>"
+  TuiIdentity__ApiKeyHash: "<hashed-api-key>"
   AgentSeeding__Agents__0__ApiKey: "<agent-api-key>"
   AgentSeeding__Agents__1__ApiKey: "<agent-api-key>"
+  AgentSeeding__Agents__2__ApiKey: "<agent-api-key>"
+  AgentSeeding__Agents__3__ApiKey: "<agent-api-key>"
+  AgentSeeding__Agents__4__ApiKey: "<agent-api-key>"
+  AgentSeeding__Agents__5__ApiKey: "<agent-api-key>"
+  AgentSeeding__Agents__6__ApiKey: "<agent-api-key>"
+  AgentSeeding__Agents__7__ApiKey: "<agent-api-key>"
   GitHub__Token: "<github-token>"
   
 # Source: https://kubernetes.io/docs/concepts/configuration/secret/

@@ -38,8 +38,9 @@ builder.Services
     .AddOptions<CustomerSeedOptions>()
     .Bind(builder.Configuration.GetSection(CustomerSeedOptions.SectionName))
     .Validate(options =>
-        options.PublicId != Guid.Empty &&
-        !string.IsNullOrWhiteSpace(options.CompanyName),
+        options.Customers.All(c =>
+            c.PublicId != Guid.Empty &&
+            !string.IsNullOrWhiteSpace(c.CompanyName)),
         "Customer seeding configuration is incomplete.")
     .ValidateOnStart();
 
@@ -52,24 +53,36 @@ builder.Services
         options.Agents.All(a =>
             a.PublicId != Guid.Empty &&
             !string.IsNullOrWhiteSpace(a.ApiKey) &&
-            !string.IsNullOrWhiteSpace(a.Platform)),
+            !string.IsNullOrWhiteSpace(a.Platform) &&
+            !string.IsNullOrWhiteSpace(a.CompanyName)),
         "Agent seeding configuration is incomplete.")
+    .ValidateOnStart();
+
+// Configure release seeding
+builder.Services
+    .AddOptions<ReleaseSeedOptions>()
+    .Bind(builder.Configuration.GetSection(ReleaseSeedOptions.SectionName))
+    .Validate(options =>
+        options.Releases.Count > 0 &&
+        options.Releases.All(r =>
+            !string.IsNullOrWhiteSpace(r.Version)),
+        "Release seeding configuration is incomplete.")
     .ValidateOnStart();
 
 // Register password hasher for agent API keys
 builder.Services.AddScoped<IPasswordHasher<Agent>, PasswordHasher<Agent>>();
 
-// Configure CLI identity
+// Configure TUI identity
 builder.Services
-    .AddOptions<CliIdentityOptions>()
-    .Bind(builder.Configuration.GetSection(CliIdentityOptions.SectionName))
+    .AddOptions<TuiIdentityOptions>()
+    .Bind(builder.Configuration.GetSection(TuiIdentityOptions.SectionName))
     .Validate(options =>
         !string.IsNullOrWhiteSpace(options.ApiKeyHash),
-        "CLI identity configuration is incomplete.")
+        "TUI identity configuration is incomplete.")
     .ValidateOnStart();
 
-// Register password hasher for CLI API keys
-builder.Services.AddScoped<IPasswordHasher<CliApiKeyAuthenticationHandler>, PasswordHasher<CliApiKeyAuthenticationHandler>>();
+// Register password hasher for TUI API keys
+builder.Services.AddScoped<IPasswordHasher<TuiApiKeyAuthenticationHandler>, PasswordHasher<TuiApiKeyAuthenticationHandler>>();
 
 // Register and seed DbContext
 builder.Services.AddDbContext<DeploymentManagerDbContext>((serviceProvider, options) =>
@@ -77,6 +90,7 @@ builder.Services.AddDbContext<DeploymentManagerDbContext>((serviceProvider, opti
     var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
     var customerSeedOptions = serviceProvider.GetRequiredService<IOptions<CustomerSeedOptions>>().Value;
     var agentSeedOptions = serviceProvider.GetRequiredService<IOptions<AgentSeedOptions>>().Value;
+    var releaseSeedOptions = serviceProvider.GetRequiredService<IOptions<ReleaseSeedOptions>>().Value;
     var passwordHasher = serviceProvider.GetRequiredService<IPasswordHasher<Agent>>();
 
     var connectionString =
@@ -91,12 +105,14 @@ builder.Services.AddDbContext<DeploymentManagerDbContext>((serviceProvider, opti
     options.UseSqlServer(connectionString)
         .UseSeeding((context, _) =>
         {
-            DeploymentManagerDbContextSeeder.SeedAsync(context, customerSeedOptions, agentSeedOptions, passwordHasher, CancellationToken.None)
+            DeploymentManagerDbContextSeeder.SeedAsync(context, customerSeedOptions,
+            agentSeedOptions, releaseSeedOptions, passwordHasher, CancellationToken.None)
                 .GetAwaiter().GetResult();
         })
         .UseAsyncSeeding(async (context, _, ct) =>
         {
-            await DeploymentManagerDbContextSeeder.SeedAsync(context, customerSeedOptions, agentSeedOptions, passwordHasher, ct);
+            await DeploymentManagerDbContextSeeder.SeedAsync(context, customerSeedOptions,
+            agentSeedOptions, releaseSeedOptions, passwordHasher, ct);
         });
 });
 builder.Services.AddScoped<IDeploymentManagerDbContext>(sp => sp.GetRequiredService<DeploymentManagerDbContext>());
@@ -139,8 +155,8 @@ builder.Services
     .AddScheme<AuthenticationSchemeOptions, AgentApiKeyAuthenticationHandler>(
         AgentApiKeyAuthenticationHandler.SchemeName,
         _ => { })
-    .AddScheme<AuthenticationSchemeOptions, CliApiKeyAuthenticationHandler>(
-        CliApiKeyAuthenticationHandler.SchemeName,
+    .AddScheme<AuthenticationSchemeOptions, TuiApiKeyAuthenticationHandler>(
+        TuiApiKeyAuthenticationHandler.SchemeName,
         _ => { });
 
 // Register named policies
@@ -151,9 +167,9 @@ builder.Services.AddAuthorization(options =>
         policy.AuthenticationSchemes.Add(AgentApiKeyAuthenticationHandler.SchemeName);
         policy.RequireAuthenticatedUser();
     });
-    options.AddPolicy("Cli", policy =>
+    options.AddPolicy("Tui", policy =>
     {
-        policy.AuthenticationSchemes.Add(CliApiKeyAuthenticationHandler.SchemeName);
+        policy.AuthenticationSchemes.Add(TuiApiKeyAuthenticationHandler.SchemeName);
         policy.RequireAuthenticatedUser();
     });
 });

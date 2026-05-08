@@ -6,7 +6,7 @@ namespace DeploymentManager.Api.Infrastructure.Configuration;
 public sealed class AgentSeedOptions
 {
     public const string SectionName = "AgentSeeding";
-    public List<SeededAgent> Agents { get; init; } = new();
+    public List<SeededAgent> Agents { get; init; } = [];
 }
 
 public sealed class SeededAgent
@@ -14,4 +14,5 @@ public sealed class SeededAgent
     public Guid PublicId { get; init; }
     public string ApiKey { get; init; } = string.Empty;
     public string Platform { get; init; } = string.Empty;
+    public string CompanyName { get; init; } = string.Empty;
 }
