@@ -121,18 +121,26 @@ public sealed class CustomersMenu
     {
         var customersTable = new Table()
                 .Border(TableBorder.None)   
-                .AddColumn("Company".PadRight(25))
-                .AddColumn("Desired Version".PadRight(20))
+                .AddColumn("Company".PadRight(20))
+                .AddColumn("Agents".PadRight(10))
                 .AddColumn("Current Version".PadRight(20))
-                .AddColumn("Agents");
+                .AddColumn("Desired Version");
 
         foreach (var customer in customers)
         {
+            var currentVersionRange = string.IsNullOrWhiteSpace(customer.CurrentVersionRange)
+                                      ? "[Grey70]–[/]"
+                                      : customer.CurrentVersionRange;
+
+            var desiredVersion = string.IsNullOrWhiteSpace(customer.DesiredVersion)
+                                 ? "[Grey70]–[/]"
+                                 : customer.DesiredVersion;
+            
             customersTable.AddRow(
                 customer.CompanyName,
-                customer.DesiredVersion,
-                customer.CurrentVersionRange,
-                customer.AgentCount.ToString());
+                customer.AgentCount.ToString(),
+                currentVersionRange,
+                desiredVersion);
         }
 
         return customersTable;
@@ -146,19 +154,23 @@ public sealed class CustomersMenu
         ConsoleLayout.WriteHeader(status, context);
 
         AnsiConsole.MarkupLine(
-            $"{"Company".PadRight(25)}" +
-            $"{"Desired Version".PadRight(20)}" +
+            $"{"Company".PadLeft(2).PadRight(20)}" +
+            $"{"Agents".PadRight(10)}" +
             $"{"Current Version".PadRight(20)}" +
-            $"{"Agents"}");
+            $"{"Desired Version"}");
 
         var items = customers.Select(customer => new CustomerSelectionItem
         {
             Customer = customer,
             Label =
-                $"{customer.CompanyName.PadRight(25)}" +
-                $"{customer.DesiredVersion.PadRight(20)}" +
-                $"{customer.CurrentVersionRange.PadRight(20)}" +
-                $"{customer.AgentCount}"
+                $"{customer.CompanyName.PadRight(20)}" +
+                $"{customer.AgentCount.ToString().PadRight(10)}" +
+                $"{(string.IsNullOrWhiteSpace(customer.CurrentVersionRange)
+                    ? "[Grey70]" + "–".PadRight(20) + "[/]"
+                    : customer.CurrentVersionRange.PadRight(20))}" +
+                $"{(string.IsNullOrWhiteSpace(customer.DesiredVersion)
+                    ? "[Grey70]–[/]"
+                    : customer.DesiredVersion)}"
         }).ToList();
 
         items.Add(new CustomerSelectionItem
