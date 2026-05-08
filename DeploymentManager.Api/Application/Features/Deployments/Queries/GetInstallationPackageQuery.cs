@@ -1,8 +1,8 @@
 using MediatR;
 using FluentResults;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Dtos;
+using DeploymentManager.Api.Application.Features.Deployments.Dtos;
 
-namespace DeploymentManager.Api.Application.Features.InstallationPackages.Queries;
+namespace DeploymentManager.Api.Application.Features.Deployments.Queries;
 
 /// <summary>
 /// Query for retrieving the installation package for an agent.

@@ -1,14 +1,14 @@
 using Moq;
 using MockQueryable.Moq;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Interfaces;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Dtos;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Queries;
+using DeploymentManager.Api.Application.Features.Deployments.Interfaces;
+using DeploymentManager.Api.Application.Features.Deployments.Dtos;
+using DeploymentManager.Api.Application.Features.Deployments.Queries;
 using DeploymentManager.Api.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
 using DeploymentManager.Api.Domain.Entities;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Errors;
+using DeploymentManager.Api.Application.Features.Deployments.Errors;
 
-namespace DeploymentManager.Api.Tests.Application.Features.InstallationPackages.Queries;
+namespace DeploymentManager.Api.Tests.Application.Features.Deployments.Queries;
 
 [TestClass]
 public sealed class GetInstallationPackageQueryHandlerTests
@@ -199,7 +199,7 @@ public sealed class GetInstallationPackageQueryHandlerTests
         var customer = new Customer
         {
             Id = 1,
-            CompanyName = "Demo Company",
+            CompanyName = "Test Company",
             DesiredRelease = desiredRelease
         };
 

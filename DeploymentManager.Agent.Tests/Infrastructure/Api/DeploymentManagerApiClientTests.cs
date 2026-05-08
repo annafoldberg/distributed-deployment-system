@@ -7,6 +7,7 @@ using DeploymentManager.Agent.Infrastructure.Configuration;
 using System.Net;
 using System.Text;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace DeploymentManager.Agent.Tests.Infrastructure.Api;
 
@@ -17,7 +18,6 @@ public sealed class DeploymentManagerApiClientTests
     private HttpClient _httpClient = null!;
     private DeploymentManagerApiClient _client = null!;
     private Guid _agentId;
-    private string _requestUri = string.Empty;
 
     [TestInitialize]
     public void TestInitialize()
@@ -35,14 +35,15 @@ public sealed class DeploymentManagerApiClientTests
         });
         var logger = Mock.Of<ILogger<DeploymentManagerApiClient>>();
         _client = new DeploymentManagerApiClient(_httpClient, options, logger);
-        _requestUri = $"deployments/{_agentId}/package";
     }
 
+    // -------------------- GetInstallationPackageAsync --------------------
     [TestMethod]
     public async Task GetInstallationPackageAsync_IsValidResponse_ReturnsInstallationPackage()
     {
         // Arrange
-        SetupHttpResponse(fileNameStar: "app-osx-arm64.zip");
+        var requestUri = $"deployments/{_agentId}/package";
+        SetupGetInstallationPackageHttpResponse(requestUri, releaseVersion: "1.0.0", fileNameStar: "app-osx-arm64.zip");
 
         // Act
         var result = await _client.GetInstallationPackageAsync(CancellationToken.None);
@@ -50,6 +51,7 @@ public sealed class DeploymentManagerApiClientTests
         // Assert
         Assert.IsNotNull(result);
         Assert.IsNotNull(result.Content);
+        Assert.AreEqual("1.0.0", result.Version);
         Assert.AreEqual("app-osx-arm64.zip", result.FileName);
         var content = await new StreamReader(result.Content).ReadToEndAsync();
         Assert.AreEqual("package-content", content);
@@ -57,7 +59,7 @@ public sealed class DeploymentManagerApiClientTests
             "SendAsync",
             Times.Once(),
             ItExpr.Is<HttpRequestMessage>(r =>
-                r.RequestUri!.AbsoluteUri.Contains(_requestUri)),
+                r.RequestUri!.AbsoluteUri.Contains(requestUri)),
             ItExpr.IsAny<CancellationToken>());
     }
 
@@ -65,7 +67,8 @@ public sealed class DeploymentManagerApiClientTests
     public async Task GetInstallationPackageAsync_FileNameStarIsPresent_UsesFileNameStar()
     {
         // Arrange
-        SetupHttpResponse(fileNameStar: "app-osx-arm64.zip", fileName: "app-win-x64.zip");
+        var requestUri = $"deployments/{_agentId}/package";
+        SetupGetInstallationPackageHttpResponse(requestUri, releaseVersion: "1.0.0", fileNameStar: "app-osx-arm64.zip", fileName: "app-win-x64.zip");
 
         // Act
         var result = await _client.GetInstallationPackageAsync(CancellationToken.None);
@@ -73,6 +76,7 @@ public sealed class DeploymentManagerApiClientTests
         // Assert
         Assert.IsNotNull(result);
         Assert.IsNotNull(result.Content);
+        Assert.AreEqual("1.0.0", result.Version);
         Assert.AreEqual("app-osx-arm64.zip", result.FileName);
     }
 
@@ -80,7 +84,8 @@ public sealed class DeploymentManagerApiClientTests
     public async Task GetInstallationPackageAsync_FileNameStarIsNotPresent_UsesFileName()
     {
         // Arrange
-        SetupHttpResponse(fileName: "app-osx-arm64.zip");
+        var requestUri = $"deployments/{_agentId}/package";
+        SetupGetInstallationPackageHttpResponse(requestUri, releaseVersion: "1.0.0", fileName: "app-osx-arm64.zip");
 
         // Act
         var result = await _client.GetInstallationPackageAsync(CancellationToken.None);
@@ -88,6 +93,7 @@ public sealed class DeploymentManagerApiClientTests
         // Assert
         Assert.IsNotNull(result);
         Assert.IsNotNull(result.Content);
+        Assert.AreEqual("1.0.0", result.Version);
         Assert.AreEqual("app-osx-arm64.zip", result.FileName);
     }
 
@@ -95,7 +101,8 @@ public sealed class DeploymentManagerApiClientTests
     public async Task GetInstallationPackageAsync_IsNotSuccessStatusCode_ReturnsNull()
     {
         // Arrange
-        SetupHttpResponse(HttpStatusCode.NotFound);
+        var requestUri = $"deployments/{_agentId}/package";
+        SetupGetInstallationPackageHttpResponse(requestUri, HttpStatusCode.NotFound);
 
         // Act
         var result = await _client.GetInstallationPackageAsync(CancellationToken.None);
@@ -106,7 +113,27 @@ public sealed class DeploymentManagerApiClientTests
             "SendAsync",
             Times.Once(),
             ItExpr.Is<HttpRequestMessage>(r =>
-                r.RequestUri!.AbsoluteUri.Contains(_requestUri)),
+                r.RequestUri!.AbsoluteUri.Contains(requestUri)),
+            ItExpr.IsAny<CancellationToken>());
+    }
+
+    [TestMethod]
+    public async Task GetInstallationPackageAsync_VersionMissing_ReturnsNull()
+    {
+        // Arrange
+        var requestUri = $"deployments/{_agentId}/package";
+        SetupGetInstallationPackageHttpResponse(requestUri, fileNameStar: "app-osx-arm64.zip", fileName: "app-win-x64.zip");
+
+        // Act
+        var result = await _client.GetInstallationPackageAsync(CancellationToken.None);
+
+        // Assert
+        Assert.IsNull(result);
+        _mockHttpHandler.Protected().Verify(
+            "SendAsync",
+            Times.Once(),
+            ItExpr.Is<HttpRequestMessage>(r =>
+                r.RequestUri!.AbsoluteUri.Contains(requestUri)),
             ItExpr.IsAny<CancellationToken>());
     }
 
@@ -114,7 +141,8 @@ public sealed class DeploymentManagerApiClientTests
     public async Task GetInstallationPackageAsync_FileNameMissing_ReturnsNull()
     {
         // Arrange
-        SetupHttpResponse();
+        var requestUri = $"deployments/{_agentId}/package";
+        SetupGetInstallationPackageHttpResponse(requestUri, releaseVersion: "1.0.0");
 
         // Act
         var result = await _client.GetInstallationPackageAsync(CancellationToken.None);
@@ -125,12 +153,41 @@ public sealed class DeploymentManagerApiClientTests
             "SendAsync",
             Times.Once(),
             ItExpr.Is<HttpRequestMessage>(r =>
-                r.RequestUri!.AbsoluteUri.Contains(_requestUri)),
+                r.RequestUri!.AbsoluteUri.Contains(requestUri)),
+            ItExpr.IsAny<CancellationToken>());
+    }
+
+    // -------------------- ReportInstallationResultAsync --------------------
+    [TestMethod]
+    public async Task ReportInstallationResultAsync_InstallationSucceeded_SendsRequest()
+    {
+        // Arrange
+        var requestUri = $"deployments/{_agentId}/result";
+        SetupReportInstallationResultHttpResponse(requestUri);
+
+        // Act
+        await _client.ReportInstallationResultAsync(
+            succeeded: true,
+            installedVersion: "1.0.1",
+            errorMessage: null,
+            CancellationToken.None);
+        
+        // Assert
+        _mockHttpHandler.Protected().Verify(
+            "SendAsync",
+            Times.Once(),
+            ItExpr.Is<HttpRequestMessage>(r =>
+                r.RequestUri!.AbsoluteUri.Contains(requestUri)),
             ItExpr.IsAny<CancellationToken>());
     }
 
     // -------------------- Helper Methods --------------------
-    private void SetupHttpResponse(HttpStatusCode statusCode = HttpStatusCode.OK, string? fileNameStar = null, string? fileName = null)
+    private void SetupGetInstallationPackageHttpResponse(
+        string requestUri,
+        HttpStatusCode statusCode = HttpStatusCode.OK,
+        string? releaseVersion = null,
+        string? fileNameStar = null,
+        string? fileName = null)
     {
         var content = new StreamContent(new MemoryStream(Encoding.UTF8.GetBytes("package-content")));
 
@@ -140,18 +197,41 @@ public sealed class DeploymentManagerApiClientTests
             FileName = fileName
         };
 
-        _mockHttpHandler.Protected().Setup<Task<HttpResponseMessage>>(
-            "SendAsync",
-            ItExpr.Is<HttpRequestMessage>(r =>
-                r.RequestUri!.AbsoluteUri.Contains(_requestUri)),
-            ItExpr.IsAny<CancellationToken>()
-        ).ReturnsAsync(new HttpResponseMessage
+        var response = new HttpResponseMessage
         {
             StatusCode = statusCode,
             Content = statusCode == HttpStatusCode.OK ? content : null
-        });
+        };
+
+        if (!string.IsNullOrWhiteSpace(releaseVersion))
+            response.Headers.Add("X-Release-Version", releaseVersion);
+
+        _mockHttpHandler.Protected().Setup<Task<HttpResponseMessage>>(
+            "SendAsync",
+            ItExpr.Is<HttpRequestMessage>(r =>
+                r.RequestUri!.AbsoluteUri.Contains(requestUri)),
+            ItExpr.IsAny<CancellationToken>()
+        ).ReturnsAsync(response);
+    }
+
+    private void SetupReportInstallationResultHttpResponse(
+        string requestUri,
+        HttpStatusCode statusCode = HttpStatusCode.OK,
+        List<string>? errorMessages = null)
+    {
+        var response = new HttpResponseMessage
+        {
+            StatusCode = statusCode,
+            Content = errorMessages is not null
+                      ? JsonContent.Create(errorMessages)
+                      : null
+        };
+
+        _mockHttpHandler.Protected().Setup<Task<HttpResponseMessage>>(
+            "SendAsync",
+            ItExpr.Is<HttpRequestMessage>(r =>
+                r.RequestUri!.AbsoluteUri.Contains(requestUri)),
+            ItExpr.IsAny<CancellationToken>()
+        ).ReturnsAsync(response);
     }
 }
-
-// Sources:
-// ContentDispositionHeaderValue: https://learn.microsoft.com/en-us/dotnet/api/system.net.http.headers.contentdispositionheadervalue?view=net-10.0

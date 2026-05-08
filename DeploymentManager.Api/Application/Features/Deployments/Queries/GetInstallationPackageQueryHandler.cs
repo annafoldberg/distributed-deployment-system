@@ -2,11 +2,11 @@ using MediatR;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using DeploymentManager.Api.Application.Common.Interfaces;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Interfaces;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Dtos;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Errors;
+using DeploymentManager.Api.Application.Features.Deployments.Interfaces;
+using DeploymentManager.Api.Application.Features.Deployments.Dtos;
+using DeploymentManager.Api.Application.Features.Deployments.Errors;
 
-namespace DeploymentManager.Api.Application.Features.InstallationPackages.Queries;
+namespace DeploymentManager.Api.Application.Features.Deployments.Queries;
 
 /// <summary>
 /// Handles retrieval of installation packages for an agent.
@@ -64,7 +64,7 @@ public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInst
             _logger.LogWarning("Package for platform {Platform} with version {Version} not found.", platform, desiredRelease.Version);
             return Result.Fail(new PackageNotFoundError());
         }
-
+        
         return Result.Ok(package);
     }
 }

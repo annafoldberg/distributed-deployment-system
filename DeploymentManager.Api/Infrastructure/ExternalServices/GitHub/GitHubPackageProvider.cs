@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Interfaces;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Dtos;
+using DeploymentManager.Api.Application.Features.Deployments.Interfaces;
+using DeploymentManager.Api.Application.Features.Deployments.Dtos;
 using DeploymentManager.Api.Infrastructure.Configuration;
 
 namespace DeploymentManager.Api.Infrastructure.ExternalServices.GitHub;
@@ -63,6 +63,7 @@ public class GitHubPackageProvider : IPackageProvider
         {
             Content = content,
             ContentType = asset.ContentType,
+            Version = version,
             FileName = asset.Name
         };
     }

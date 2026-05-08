@@ -27,9 +27,12 @@ public sealed class DeploymentOrchestratorTests
     public async Task ExecuteAsync_PackageIsRetrievedAndInstalled_ReturnsSucceeded()
     {
         // Arrange
-        var installationPackage = new InstallationPackage(
-            new MemoryStream(),
-            "app-osx-arm64.zip");
+        var installationPackage = new InstallationPackage
+        {
+            Content = new MemoryStream(),
+            Version = "1.0.0",
+            FileName = "app-osx-arm64.zip"
+        };
         
         _mockApiClient.Setup(c =>
             c.GetInstallationPackageAsync(It.IsAny<CancellationToken>()))
@@ -77,10 +80,13 @@ public sealed class DeploymentOrchestratorTests
     public async Task ExecuteAsync_PackageIsNotInstalled_ReturnsInstallationFailed()
     {
         // Arrange
-        var installationPackage = new InstallationPackage(
-            new MemoryStream(),
-            "app-osx-arm64.zip");
-        
+        var installationPackage = new InstallationPackage
+        {
+            Content = new MemoryStream(),
+            Version = "1.0.0",
+            FileName = "app-osx-arm64.zip"
+        };
+
         _mockApiClient.Setup(c =>
             c.GetInstallationPackageAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(installationPackage);

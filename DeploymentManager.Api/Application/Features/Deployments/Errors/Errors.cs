@@ -1,6 +1,6 @@
 using FluentResults;
 
-namespace DeploymentManager.Api.Application.Features.InstallationPackages.Errors;
+namespace DeploymentManager.Api.Application.Features.Deployments.Errors;
 
 public sealed class AgentNotFoundError : Error
 {

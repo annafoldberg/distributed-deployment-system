@@ -29,6 +29,7 @@ public static class CustomerViewModelMapper
     {
         var versions = customer.Agents
                        .Select(a => a.CurrentVersion)
+                       .Where(v => Version.TryParse(v, out _))
                        .Distinct()
                        .OrderBy(v => Version.Parse(v))
                        .ToList();
