@@ -26,17 +26,21 @@ public sealed class DeploymentOrchestrator
         var installationPackage = await _apiClient.GetInstallationPackageAsync(ct);
         if (installationPackage is null)
         {
-            _logger.LogWarning("Failed to retrieve installation package.");
+            var errorMessage = "Failed to retrieve installation package.";
+            _logger.LogWarning(errorMessage);
+            await _apiClient.ReportInstallationResultAsync(false, null, errorMessage, ct);
             return DeploymentResult.RetrievalFailed;
         }
 
         var installationResult = await _packageInstaller.InstallPackageAsync(installationPackage, ct);
         if (installationResult == InstallationResult.Failed)
         {
-            _logger.LogWarning("Failed to install package.");
+            var errorMessage = "Failed to install package.";
+            _logger.LogWarning(errorMessage);
+            await _apiClient.ReportInstallationResultAsync(false, null, errorMessage, ct);
             return DeploymentResult.InstallationFailed;
         }
-
+        await _apiClient.ReportInstallationResultAsync(true, installationPackage.Version, null, ct);
         return DeploymentResult.Succeeded;
     }
 }

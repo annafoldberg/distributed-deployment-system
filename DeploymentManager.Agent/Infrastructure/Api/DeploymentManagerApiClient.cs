@@ -1,5 +1,8 @@
+using System.Net.Http.Json;
 using DeploymentManager.Agent.Application.Features.Deployment.Interfaces;
 using DeploymentManager.Agent.Application.Features.Deployment.Models;
+using DeploymentManager.Agent.Application.Features.Deployment.Results;
+using DeploymentManager.Agent.Infrastructure.Api.Contracts;
 using DeploymentManager.Agent.Infrastructure.Configuration;
 using Microsoft.Extensions.Options;
 
@@ -36,6 +39,16 @@ public sealed class DeploymentManagerApiClient : IDeploymentManagerApiClient
             return null;
         }
 
+        var version = response.Headers.TryGetValues("X-Release-Version", out var values)
+                      ? values.FirstOrDefault()
+                      : null;
+
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            _logger.LogError("Installation package response did not contain deployment version");
+            return null;
+        }
+
         var fileName = response.Content.Headers.ContentDisposition?.FileNameStar
                        ?? response.Content.Headers.ContentDisposition?.FileName;
 
@@ -53,7 +66,36 @@ public sealed class DeploymentManagerApiClient : IDeploymentManagerApiClient
         await responseStream.CopyToAsync(content, ct);
         content.Position = 0;
 
-        return new InstallationPackage(content, fileName);
+        return new InstallationPackage
+        {
+            Content = content,
+            Version = version,
+            FileName = fileName
+        };
+    }
+
+    public async Task ReportInstallationResultAsync(bool succeeded, string? installedVersion, string? errorMessage, CancellationToken ct)
+    {
+        var requestUri = $"deployments/{_options.AgentId}/result";
+        var installationResult = new InstallationResultDto
+        {
+            Succeeded = succeeded,
+            InstalledVersion = succeeded ? installedVersion : null,
+            ErrorMessage = succeeded ? null : errorMessage
+        };
+
+        using var response = await _httpClient.PostAsJsonAsync(requestUri, installationResult, ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var responseErrorMessages = await response.Content.ReadFromJsonAsync<List<string>>(ct);
+            
+            var responseErrorMessage = responseErrorMessages?.FirstOrDefault() ?? "Failed to report installed version.";
+
+            _logger.LogWarning("Failed to report installation result for agent {AgentId}." +
+                               "Status code: {StatusCode}. Error message: {ErrorMessage}",
+                               _options.AgentId, response.StatusCode, responseErrorMessage);
+        }
     }
 }
 

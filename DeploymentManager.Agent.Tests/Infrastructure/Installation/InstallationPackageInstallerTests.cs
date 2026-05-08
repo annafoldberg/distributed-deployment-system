@@ -1,7 +1,5 @@
 using Moq;
 using Microsoft.Extensions.Logging;
-using DeploymentManager.Agent.Application.Features.Deployment.Interfaces;
-using DeploymentManager.Agent.Application.Features.Deployment;
 using DeploymentManager.Agent.Application.Features.Deployment.Models;
 using DeploymentManager.Agent.Application.Features.Deployment.Results;
 using DeploymentManager.Agent.Infrastructure.Installation;
@@ -172,7 +170,31 @@ public sealed class InstallationPackageInstallerTests
     {
         // Arrange
         var stream = new MemoryStream();
-        var installationPackage = new InstallationPackage(stream, "package.txt");
+        var installationPackage = new InstallationPackage
+        {
+            Content = stream, 
+            Version = "1.0.0",
+            FileName = "package.txt"
+        };
+        
+        // Act
+        var result = await _installer.InstallPackageAsync(installationPackage, CancellationToken.None);
+
+        // Assert
+        Assert.AreEqual(InstallationResult.Failed, result);
+        Assert.IsFalse(Directory.Exists(_installDirectory));
+    }
+
+    [TestMethod]
+    public async Task InstallPackageAsync_VersionMissing_ReturnsFailed()
+    {
+        // Arrange
+        var stream = new MemoryStream();
+        var installationPackage = new InstallationPackage
+        {
+            Content = stream,
+            FileName = "package.zip"
+        };
         
         // Act
         var result = await _installer.InstallPackageAsync(installationPackage, CancellationToken.None);
@@ -187,7 +209,10 @@ public sealed class InstallationPackageInstallerTests
     {
         // Arrange
         var stream = new MemoryStream();
-        var installationPackage = new InstallationPackage(stream, "");
+        var installationPackage = new InstallationPackage
+        {
+            Content = stream
+        };
         
         // Act
         var result = await _installer.InstallPackageAsync(installationPackage, CancellationToken.None);
@@ -242,7 +267,12 @@ public sealed class InstallationPackageInstallerTests
     {
         // Arrange
         var stream = new MemoryStream();
-        var installationPackage = new InstallationPackage(stream, "package.txt");
+        var installationPackage = new InstallationPackage
+        {
+            Content = stream, 
+            Version = "1.0.0",
+            FileName = "package.zip"
+        };
         
         // Act
         var result = await _installer.InstallPackageAsync(installationPackage, CancellationToken.None);
@@ -277,7 +307,12 @@ public sealed class InstallationPackageInstallerTests
     {
         // Arrange
         var stream = new MemoryStream();
-        var installationPackage = new InstallationPackage(stream, "package.txt");
+        var installationPackage = new InstallationPackage
+        {
+            Content = stream, 
+            Version = "1.0.0",
+            FileName = "package.txt"
+        };
         
         var parentDirectory = Path.GetDirectoryName(_installDirectory);
 
@@ -308,7 +343,12 @@ public sealed class InstallationPackageInstallerTests
         }
 
         stream.Position = 0;
-        return new InstallationPackage(stream, "package.zip");
+        return new InstallationPackage
+        {
+            Content = stream, 
+            Version = "1.0.0",
+            FileName = "package.zip"
+        };
     }
 }
 

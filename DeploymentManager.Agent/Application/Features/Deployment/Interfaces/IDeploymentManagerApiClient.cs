@@ -12,4 +12,9 @@ public interface IDeploymentManagerApiClient
     /// Retrieves installation packages from Deployment Manager API.
     /// </summary>
     Task<InstallationPackage?> GetInstallationPackageAsync(CancellationToken ct);
+
+    /// <summary>
+    /// Reports the result of an installation attempt to Deployment Manager API.
+    /// </summary>
+    Task ReportInstallationResultAsync(bool succeeded, string? installedVersion, string? errorMessage, CancellationToken ct);
 }
