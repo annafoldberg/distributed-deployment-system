@@ -113,7 +113,11 @@ public sealed class AgentsMenu
             ? message
             : $"[Red3_1]•[/] [Grey70]Live data · next refresh in {nextUpdateIn}s[/]";
 
-        var context = $"{customer.CompanyName} · Desired version: {customer.DesiredVersion}";
+        var desiredVersion = string.IsNullOrWhiteSpace(customer.DesiredVersion)
+                             ? "[Grey70]None[/]"
+                             : customer.DesiredVersion;
+
+        var context = $"{customer.CompanyName} · Desired version: {desiredVersion}";
         var content = BuildAgentsTable(agents);
         var actions = "[DeepPink3_1]<D>[/] Update Desired Version  [DodgerBlue2]<B>[/] Back  [dim]<Q>[/] Quit";
 
@@ -138,9 +142,13 @@ public sealed class AgentsMenu
                 _ => $"[Gold1]? Unknown[/]"
             };
 
+            var currentVersion = string.IsNullOrWhiteSpace(agent.CurrentVersion)
+                                 ? "[Grey70]–[/]"
+                                 : agent.CurrentVersion;
+
             agentsTable.AddRow(
                 agent.Id.ToString(),
-                agent.CurrentVersion,
+                currentVersion,
                 agentStatus,
                 agent.Platform);
         }
@@ -149,8 +157,12 @@ public sealed class AgentsMenu
 
     private async Task ShowUpdateDesiredVersionPromptAsync(Guid customerId, CustomerViewModel customer, CancellationToken ct)
     {
+        var desiredVersion = string.IsNullOrWhiteSpace(customer.DesiredVersion)
+                             ? "[Grey70]None[/]"
+                             : customer.DesiredVersion;
+
         var status = "[Grey53]•[/] [Grey70]Live updates paused[/]";
-        var context = $"{customer.CompanyName} · Desired version: {customer.DesiredVersion}\n" +
+        var context = $"{customer.CompanyName} · Desired version: {desiredVersion}\n" +
                       $"Type [Purple_2]'exit'[/] to cancel  [Green3_1]<Enter>[/] Confirm";
 
         ConsoleLayout.WriteHeader(status, context);

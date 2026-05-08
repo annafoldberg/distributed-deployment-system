@@ -17,37 +17,44 @@ public static class DeploymentManagerDbContextSeeder
         DbContext context,
         CustomerSeedOptions customerSeedOptions,
         AgentSeedOptions agentSeedOptions,
+        ReleaseSeedOptions releaseSeedOptions,
         IPasswordHasher<Agent> passwordHasher,
         CancellationToken ct = default)
     {
-        // Seed release
-        var release = await context.Set<Release>().FirstOrDefaultAsync(r => r.Version == "1.0.0", ct);
+        // Seed releases
+        foreach (var seededRelease in releaseSeedOptions.Releases)
+        {
+            var releaseExists = await context.Set<Release>().AnyAsync(r => r.Version == seededRelease.Version, ct);
+
+            if (!releaseExists)
+            {
+                var release = new Release
+                {
+                    Version = seededRelease.Version
+                };
+
+                context.Set<Release>().Add(release);
+            }
+        }
         
-        if (release is null)
+        // Seed customers
+        foreach (var seededCustomer in customerSeedOptions.Customers)
         {
-            release = new Release
-            {
-                Version = "1.0.0"
-            };
+            var customerExists = await context.Set<Customer>().AnyAsync(c => c.PublicId == seededCustomer.PublicId, ct);
 
-            context.Set<Release>().Add(release);
+            if (!customerExists)
+            {
+                var customer = new Customer
+                {
+                    PublicId = seededCustomer.PublicId,
+                    CompanyName = seededCustomer.CompanyName
+                };
+
+                context.Set<Customer>().Add(customer);
+            }
         }
 
-        // Seed customer
-        var customer = await context.Set<Customer>()
-            .FirstOrDefaultAsync(c => c.PublicId == customerSeedOptions.PublicId, ct);
-
-        if (customer is null)
-        {
-            customer = new Customer
-            {
-                PublicId = customerSeedOptions.PublicId,
-                CompanyName = customerSeedOptions.CompanyName,
-                DesiredRelease = release
-            };
-
-            context.Set<Customer>().Add(customer);
-        }
+        await context.SaveChangesAsync(ct);
 
         // Seed agents        
         foreach (var seededAgent in agentSeedOptions.Agents)
@@ -56,11 +63,17 @@ public static class DeploymentManagerDbContextSeeder
 
             if (!agentExists)
             {
+                var customer = await context.Set<Customer>()
+                    .FirstOrDefaultAsync(c => c.CompanyName == seededAgent.CompanyName, ct);
+                    
+                if (customer is null)
+                    throw new InvalidOperationException($"Customer {seededAgent.CompanyName} not found.");
+
                 var agent = new Agent
                 {
                     PublicId = seededAgent.PublicId,
                     Platform = seededAgent.Platform,
-                    Customer = customer
+                    CustomerId = customer.Id
                 };
 
                 agent.ApiKeyHash = passwordHasher.HashPassword(agent, seededAgent.ApiKey);

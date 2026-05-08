@@ -38,8 +38,9 @@ builder.Services
     .AddOptions<CustomerSeedOptions>()
     .Bind(builder.Configuration.GetSection(CustomerSeedOptions.SectionName))
     .Validate(options =>
-        options.PublicId != Guid.Empty &&
-        !string.IsNullOrWhiteSpace(options.CompanyName),
+        options.Customers.All(c =>
+            c.PublicId != Guid.Empty &&
+            !string.IsNullOrWhiteSpace(c.CompanyName)),
         "Customer seeding configuration is incomplete.")
     .ValidateOnStart();
 
@@ -52,8 +53,20 @@ builder.Services
         options.Agents.All(a =>
             a.PublicId != Guid.Empty &&
             !string.IsNullOrWhiteSpace(a.ApiKey) &&
-            !string.IsNullOrWhiteSpace(a.Platform)),
+            !string.IsNullOrWhiteSpace(a.Platform) &&
+            !string.IsNullOrWhiteSpace(a.CompanyName)),
         "Agent seeding configuration is incomplete.")
+    .ValidateOnStart();
+
+// Configure release seeding
+builder.Services
+    .AddOptions<ReleaseSeedOptions>()
+    .Bind(builder.Configuration.GetSection(ReleaseSeedOptions.SectionName))
+    .Validate(options =>
+        options.Releases.Count > 0 &&
+        options.Releases.All(r =>
+            !string.IsNullOrWhiteSpace(r.Version)),
+        "Release seeding configuration is incomplete.")
     .ValidateOnStart();
 
 // Register password hasher for agent API keys
@@ -77,6 +90,7 @@ builder.Services.AddDbContext<DeploymentManagerDbContext>((serviceProvider, opti
     var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
     var customerSeedOptions = serviceProvider.GetRequiredService<IOptions<CustomerSeedOptions>>().Value;
     var agentSeedOptions = serviceProvider.GetRequiredService<IOptions<AgentSeedOptions>>().Value;
+    var releaseSeedOptions = serviceProvider.GetRequiredService<IOptions<ReleaseSeedOptions>>().Value;
     var passwordHasher = serviceProvider.GetRequiredService<IPasswordHasher<Agent>>();
 
     var connectionString =
@@ -91,12 +105,14 @@ builder.Services.AddDbContext<DeploymentManagerDbContext>((serviceProvider, opti
     options.UseSqlServer(connectionString)
         .UseSeeding((context, _) =>
         {
-            DeploymentManagerDbContextSeeder.SeedAsync(context, customerSeedOptions, agentSeedOptions, passwordHasher, CancellationToken.None)
+            DeploymentManagerDbContextSeeder.SeedAsync(context, customerSeedOptions,
+            agentSeedOptions, releaseSeedOptions, passwordHasher, CancellationToken.None)
                 .GetAwaiter().GetResult();
         })
         .UseAsyncSeeding(async (context, _, ct) =>
         {
-            await DeploymentManagerDbContextSeeder.SeedAsync(context, customerSeedOptions, agentSeedOptions, passwordHasher, ct);
+            await DeploymentManagerDbContextSeeder.SeedAsync(context, customerSeedOptions,
+            agentSeedOptions, releaseSeedOptions, passwordHasher, ct);
         });
 });
 builder.Services.AddScoped<IDeploymentManagerDbContext>(sp => sp.GetRequiredService<DeploymentManagerDbContext>());

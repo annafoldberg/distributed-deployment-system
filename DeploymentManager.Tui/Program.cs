@@ -12,6 +12,8 @@ using Microsoft.Net.Http.Headers;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+Console.Title = "Deployment Management";
+
 // Configure TUI identity
 builder.Services
     .AddOptions<TuiIdentityOptions>()
