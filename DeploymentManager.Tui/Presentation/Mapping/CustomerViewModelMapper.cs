@@ -27,16 +27,26 @@ public static class CustomerViewModelMapper
 
     private static string CalculateCurrentVersionRange(Customer customer)
     {
-        var versions = customer.Agents
+        var rawVersions = customer.Agents
                        .Select(a => a.CurrentVersion)
-                       .Where(v => Version.TryParse(v, out _))
                        .Distinct()
-                       .OrderBy(v => Version.Parse(v))
                        .ToList();
+
+        var hasMissingVersion = rawVersions.Any(string.IsNullOrWhiteSpace);
+
+        var versions = rawVersions
+                       .Where(v => Version.TryParse(v, out _))
+                       .OrderBy(Version.Parse)
+                       .ToList();
+
+        if (versions.Count == 0)
+            return string.Empty;
+
+        if (hasMissingVersion)
+            return $"– → {versions.Last()}";
 
         return versions.Count switch
         {
-            0 => string.Empty,
             1 => versions[0],
             _ => $"{versions.First()} → {versions.Last()}"
         };
