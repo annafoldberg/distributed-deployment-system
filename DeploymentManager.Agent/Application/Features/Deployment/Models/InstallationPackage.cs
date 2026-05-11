@@ -5,7 +5,13 @@ namespace DeploymentManager.Agent.Application.Features.Deployment.Models;
 /// </summary>
 public sealed class InstallationPackage
 {
-    public Stream Content { get; init; } = Stream.Null;
-    public string Version { get; init; } = string.Empty;
-    public string FileName { get; init; } = string.Empty;
+    public Stream Content { get; }
+    public string FileName { get; }
+
+    public InstallationPackage(Stream content, string fileName)
+    {
+        Content = content;
+        FileName = fileName;
+    }
+
 }

@@ -81,7 +81,7 @@ public sealed class GetCustomerByIdQueryHandlerTests
         {
             Id = 1,
             PublicId = customerId,
-            CompanyName = "Test Company",
+            CompanyName = "Demo Company",
             DesiredRelease = desiredRelease
         };
 

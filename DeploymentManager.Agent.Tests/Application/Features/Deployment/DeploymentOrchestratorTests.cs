@@ -27,22 +27,13 @@ public sealed class DeploymentOrchestratorTests
     public async Task ExecuteAsync_PackageIsRetrievedAndInstalled_ReturnsSucceeded()
     {
         // Arrange
-        var installationPackage = new InstallationPackage
-        {
-            Content = new MemoryStream(),
-            Version = "1.0.0",
-            FileName = "app-osx-arm64.zip"
-        };
-
-        var retrievalResult = new InstallationPackageRetrievalResult
-        {
-            Status = PackageRetrievalStatus.UpdateAvailable,
-            InstallationPackage = installationPackage
-        };
+        var installationPackage = new InstallationPackage(
+            new MemoryStream(),
+            "app-osx-arm64.zip");
         
         _mockApiClient.Setup(c =>
             c.GetInstallationPackageAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(retrievalResult);
+            .ReturnsAsync(installationPackage);
 
         _mockPackageInstaller.Setup(i =>
             i.InstallPackageAsync(installationPackage, It.IsAny<CancellationToken>()))
@@ -65,14 +56,9 @@ public sealed class DeploymentOrchestratorTests
     public async Task ExecuteAsync_PackageIsNotRetrieved_ReturnsRetrievalFailed()
     {
         // Arrange
-        var retrievalResult = new InstallationPackageRetrievalResult
-        {
-            Status = PackageRetrievalStatus.Failed,
-        };
-
         _mockApiClient.Setup(c =>
             c.GetInstallationPackageAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(retrievalResult);
+            .ReturnsAsync((InstallationPackage?)null);
 
         // Act
         var result = await _orchestrator.ExecuteAsync(CancellationToken.None);
@@ -88,51 +74,16 @@ public sealed class DeploymentOrchestratorTests
     }
 
     [TestMethod]
-    public async Task ExecuteAsync_NoUpdateRequired_ReturnsNoUpdateRequired()
-    {
-        // Arrange
-        var retrievalResult = new InstallationPackageRetrievalResult
-        {
-            Status = PackageRetrievalStatus.NoUpdateRequired,
-        };
-
-        _mockApiClient.Setup(c =>
-            c.GetInstallationPackageAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(retrievalResult);
-
-        // Act
-        var result = await _orchestrator.ExecuteAsync(CancellationToken.None);
-
-        // Assert
-        Assert.AreEqual(DeploymentResult.NoUpdateRequired, result);
-        _mockApiClient.Verify(c =>
-            c.GetInstallationPackageAsync(It.IsAny<CancellationToken>()),
-            Times.Once());
-        _mockPackageInstaller.Verify(i =>
-            i.InstallPackageAsync(It.IsAny<InstallationPackage>(), It.IsAny<CancellationToken>()),
-            Times.Never());
-    }
-
-    [TestMethod]
     public async Task ExecuteAsync_PackageIsNotInstalled_ReturnsInstallationFailed()
     {
         // Arrange
-        var installationPackage = new InstallationPackage
-        {
-            Content = new MemoryStream(),
-            Version = "1.0.0",
-            FileName = "app-osx-arm64.zip"
-        };
-
-        var retrievalResult = new InstallationPackageRetrievalResult
-        {
-            Status = PackageRetrievalStatus.UpdateAvailable,
-            InstallationPackage = installationPackage
-        };
-
+        var installationPackage = new InstallationPackage(
+            new MemoryStream(),
+            "app-osx-arm64.zip");
+        
         _mockApiClient.Setup(c =>
             c.GetInstallationPackageAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(retrievalResult);
+            .ReturnsAsync(installationPackage);
 
         _mockPackageInstaller.Setup(i =>
             i.InstallPackageAsync(installationPackage, It.IsAny<CancellationToken>()))

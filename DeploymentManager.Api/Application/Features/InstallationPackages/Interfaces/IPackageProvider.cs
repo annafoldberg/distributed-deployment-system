@@ -1,6 +1,6 @@
-using DeploymentManager.Api.Application.Features.Deployments.Models;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Dtos;
 
-namespace DeploymentManager.Api.Application.Features.Deployments.Interfaces;
+namespace DeploymentManager.Api.Application.Features.InstallationPackages.Interfaces;
 
 /// <summary>
 /// Provides installation packages.

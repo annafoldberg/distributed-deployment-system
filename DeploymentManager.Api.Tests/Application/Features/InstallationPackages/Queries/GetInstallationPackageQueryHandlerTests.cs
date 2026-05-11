@@ -1,14 +1,14 @@
 using Moq;
 using MockQueryable.Moq;
-using DeploymentManager.Api.Application.Features.Deployments.Interfaces;
-using DeploymentManager.Api.Application.Features.Deployments.Models;
-using DeploymentManager.Api.Application.Features.Deployments.Queries;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Interfaces;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Dtos;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Queries;
 using DeploymentManager.Api.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
 using DeploymentManager.Api.Domain.Entities;
-using DeploymentManager.Api.Application.Features.Deployments.Errors;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Errors;
 
-namespace DeploymentManager.Api.Tests.Application.Features.Deployments.Queries;
+namespace DeploymentManager.Api.Tests.Application.Features.InstallationPackages.Queries;
 
 [TestClass]
 public sealed class GetInstallationPackageQueryHandlerTests
@@ -27,7 +27,7 @@ public sealed class GetInstallationPackageQueryHandlerTests
     }
 
     [TestMethod]
-    public async Task Handle_PackageExists_ReturnsAvailablePackage()
+    public async Task Handle_PackageExists_ReturnsOkResultWithPackage()
     {
         // Arrange
         var agentId = Guid.NewGuid();
@@ -52,15 +52,14 @@ public sealed class GetInstallationPackageQueryHandlerTests
 
         // Assert
         Assert.IsTrue(result.IsSuccess);
-        Assert.AreEqual(InstallationPackageStatus.Available, result.Value.Status);
-        Assert.AreEqual(package, result.Value.InstallationPackage);
+        Assert.AreEqual(package, result.Value);
         _mockProvider.Verify(p =>
             p.FetchPackageAsync("osx-arm64", "2.0.0", It.IsAny<CancellationToken>()),
             Times.Once());
     }
 
     [TestMethod]
-    public async Task Handle_PackageExistsAndNoInstallationExists_ReturnsAvailablePackage()
+    public async Task Handle_NoInstallationExists_ReturnsOkResultWithPackage()
     {
         // Arrange
         var agentId = Guid.NewGuid();
@@ -85,8 +84,7 @@ public sealed class GetInstallationPackageQueryHandlerTests
 
         // Assert
         Assert.IsTrue(result.IsSuccess);
-        Assert.AreEqual(InstallationPackageStatus.Available, result.Value.Status);
-        Assert.AreEqual(package, result.Value.InstallationPackage);
+        Assert.AreEqual(package, result.Value);
         _mockProvider.Verify(p =>
             p.FetchPackageAsync("osx-arm64", "2.0.0", It.IsAny<CancellationToken>()),
             Times.Once());
@@ -114,7 +112,7 @@ public sealed class GetInstallationPackageQueryHandlerTests
     }
 
     [TestMethod]
-    public async Task Handle_DesiredReleaseNotSet_ReturnsOkResultWithDesiredReleaseNotSet()
+    public async Task Handle_DesiredReleaseNotSet_ReturnsDesiredReleaseNotSetError()
     {
         // Arrange
         var agentId = Guid.NewGuid();
@@ -127,16 +125,16 @@ public sealed class GetInstallationPackageQueryHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.IsTrue(result.IsSuccess);
-        Assert.AreEqual(InstallationPackageStatus.DesiredReleaseNotSet, result.Value.Status);
-        Assert.IsNull(result.Value.InstallationPackage);
+        Assert.IsTrue(result.IsFailed);
+        Assert.HasCount(1, result.Errors);
+        Assert.IsInstanceOfType(result.Errors[0], typeof(DesiredReleaseNotSetError));
         _mockProvider.Verify(p =>
             p.FetchPackageAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never());
     }
 
     [TestMethod]
-    public async Task Handle_ReleaseAlreadyInstalled_ReturnsOkResultWithNoUpdateRequired()
+    public async Task Handle_ReleaseAlreadyInstalled_ReturnsNoUpdateRequiredError()
     {
         // Arrange
         var agentId = Guid.NewGuid();
@@ -149,9 +147,9 @@ public sealed class GetInstallationPackageQueryHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.IsTrue(result.IsSuccess);
-        Assert.AreEqual(InstallationPackageStatus.NoUpdateRequired, result.Value.Status);
-        Assert.IsNull(result.Value.InstallationPackage);
+        Assert.IsTrue(result.IsFailed);
+        Assert.HasCount(1, result.Errors);
+        Assert.IsInstanceOfType(result.Errors[0], typeof(NoUpdateRequiredError));
         _mockProvider.Verify(p =>
             p.FetchPackageAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never());
@@ -201,7 +199,7 @@ public sealed class GetInstallationPackageQueryHandlerTests
         var customer = new Customer
         {
             Id = 1,
-            CompanyName = "Test Company",
+            CompanyName = "Demo Company",
             DesiredRelease = desiredRelease
         };
 
