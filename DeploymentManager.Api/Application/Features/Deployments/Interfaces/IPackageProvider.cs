@@ -1,4 +1,4 @@
-using DeploymentManager.Api.Application.Features.Deployments.Dtos;
+using DeploymentManager.Api.Application.Features.Deployments.Models;
 
 namespace DeploymentManager.Api.Application.Features.Deployments.Interfaces;
 

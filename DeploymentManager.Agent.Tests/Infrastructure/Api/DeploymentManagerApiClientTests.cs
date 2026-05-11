@@ -8,6 +8,7 @@ using System.Net;
 using System.Text;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using DeploymentManager.Agent.Application.Features.Deployment.Results;
 
 namespace DeploymentManager.Agent.Tests.Infrastructure.Api;
 
@@ -50,10 +51,12 @@ public sealed class DeploymentManagerApiClientTests
 
         // Assert
         Assert.IsNotNull(result);
-        Assert.IsNotNull(result.Content);
-        Assert.AreEqual("1.0.0", result.Version);
-        Assert.AreEqual("app-osx-arm64.zip", result.FileName);
-        var content = await new StreamReader(result.Content).ReadToEndAsync();
+        Assert.AreEqual(PackageRetrievalStatus.UpdateAvailable, result.Status);
+        Assert.IsNotNull(result.InstallationPackage);
+        Assert.IsNotNull(result.InstallationPackage.Content);
+        Assert.AreEqual("1.0.0", result.InstallationPackage.Version);
+        Assert.AreEqual("app-osx-arm64.zip", result.InstallationPackage.FileName);
+        var content = await new StreamReader(result.InstallationPackage.Content).ReadToEndAsync();
         Assert.AreEqual("package-content", content);
         _mockHttpHandler.Protected().Verify(
             "SendAsync",
@@ -68,16 +71,19 @@ public sealed class DeploymentManagerApiClientTests
     {
         // Arrange
         var requestUri = $"deployments/{_agentId}/package";
-        SetupGetInstallationPackageHttpResponse(requestUri, releaseVersion: "1.0.0", fileNameStar: "app-osx-arm64.zip", fileName: "app-win-x64.zip");
+        SetupGetInstallationPackageHttpResponse(requestUri, releaseVersion: "1.0.0",
+            fileNameStar: "app-osx-arm64.zip", fileName: "app-win-x64.zip");
 
         // Act
         var result = await _client.GetInstallationPackageAsync(CancellationToken.None);
 
         // Assert
         Assert.IsNotNull(result);
-        Assert.IsNotNull(result.Content);
-        Assert.AreEqual("1.0.0", result.Version);
-        Assert.AreEqual("app-osx-arm64.zip", result.FileName);
+        Assert.AreEqual(PackageRetrievalStatus.UpdateAvailable, result.Status);
+        Assert.IsNotNull(result.InstallationPackage);
+        Assert.IsNotNull(result.InstallationPackage.Content);
+        Assert.AreEqual("1.0.0", result.InstallationPackage.Version);
+        Assert.AreEqual("app-osx-arm64.zip", result.InstallationPackage.FileName);
     }
 
     [TestMethod]
@@ -92,13 +98,15 @@ public sealed class DeploymentManagerApiClientTests
 
         // Assert
         Assert.IsNotNull(result);
-        Assert.IsNotNull(result.Content);
-        Assert.AreEqual("1.0.0", result.Version);
-        Assert.AreEqual("app-osx-arm64.zip", result.FileName);
+        Assert.AreEqual(PackageRetrievalStatus.UpdateAvailable, result.Status);
+        Assert.IsNotNull(result.InstallationPackage);
+        Assert.IsNotNull(result.InstallationPackage.Content);
+        Assert.AreEqual("1.0.0", result.InstallationPackage.Version);
+        Assert.AreEqual("app-osx-arm64.zip", result.InstallationPackage.FileName);
     }
 
     [TestMethod]
-    public async Task GetInstallationPackageAsync_IsNotSuccessStatusCode_ReturnsNull()
+    public async Task GetInstallationPackageAsync_IsNotSuccessStatusCode_ReturnsFailed()
     {
         // Arrange
         var requestUri = $"deployments/{_agentId}/package";
@@ -108,7 +116,9 @@ public sealed class DeploymentManagerApiClientTests
         var result = await _client.GetInstallationPackageAsync(CancellationToken.None);
 
         // Assert
-        Assert.IsNull(result);
+        Assert.IsNotNull(result);
+        Assert.AreEqual(PackageRetrievalStatus.Failed, result.Status);
+        Assert.IsNull(result.InstallationPackage);
         _mockHttpHandler.Protected().Verify(
             "SendAsync",
             Times.Once(),
@@ -118,7 +128,29 @@ public sealed class DeploymentManagerApiClientTests
     }
 
     [TestMethod]
-    public async Task GetInstallationPackageAsync_VersionMissing_ReturnsNull()
+    public async Task GetInstallationPackageAsync_NoContentStatusCode_ReturnsNoUpdateRequired()
+    {
+        // Arrange
+        var requestUri = $"deployments/{_agentId}/package";
+        SetupGetInstallationPackageHttpResponse(requestUri, HttpStatusCode.NoContent);
+
+        // Act
+        var result = await _client.GetInstallationPackageAsync(CancellationToken.None);
+
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.AreEqual(PackageRetrievalStatus.NoUpdateRequired, result.Status);
+        Assert.IsNull(result.InstallationPackage);
+        _mockHttpHandler.Protected().Verify(
+            "SendAsync",
+            Times.Once(),
+            ItExpr.Is<HttpRequestMessage>(r =>
+                r.RequestUri!.AbsoluteUri.Contains(requestUri)),
+            ItExpr.IsAny<CancellationToken>());
+    }
+
+    [TestMethod]
+    public async Task GetInstallationPackageAsync_VersionMissing_ReturnsFailed()
     {
         // Arrange
         var requestUri = $"deployments/{_agentId}/package";
@@ -128,7 +160,9 @@ public sealed class DeploymentManagerApiClientTests
         var result = await _client.GetInstallationPackageAsync(CancellationToken.None);
 
         // Assert
-        Assert.IsNull(result);
+        Assert.IsNotNull(result);
+        Assert.AreEqual(PackageRetrievalStatus.Failed, result.Status);
+        Assert.IsNull(result.InstallationPackage);
         _mockHttpHandler.Protected().Verify(
             "SendAsync",
             Times.Once(),
@@ -138,7 +172,7 @@ public sealed class DeploymentManagerApiClientTests
     }
 
     [TestMethod]
-    public async Task GetInstallationPackageAsync_FileNameMissing_ReturnsNull()
+    public async Task GetInstallationPackageAsync_FileNameMissing_ReturnsFailed()
     {
         // Arrange
         var requestUri = $"deployments/{_agentId}/package";
@@ -148,7 +182,9 @@ public sealed class DeploymentManagerApiClientTests
         var result = await _client.GetInstallationPackageAsync(CancellationToken.None);
 
         // Assert
-        Assert.IsNull(result);
+        Assert.IsNotNull(result);
+        Assert.AreEqual(PackageRetrievalStatus.Failed, result.Status);
+        Assert.IsNull(result.InstallationPackage);
         _mockHttpHandler.Protected().Verify(
             "SendAsync",
             Times.Once(),
