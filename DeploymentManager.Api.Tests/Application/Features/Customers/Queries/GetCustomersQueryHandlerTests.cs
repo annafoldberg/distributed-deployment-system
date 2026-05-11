@@ -70,7 +70,7 @@ public sealed class GetCustomersQueryHandlerTests
         {
             Id = 1,
             PublicId = Guid.NewGuid(),
-            CompanyName = "Test Company One",
+            CompanyName = "Demo Company One",
             DesiredRelease = desiredRelease
         };
 
@@ -78,7 +78,7 @@ public sealed class GetCustomersQueryHandlerTests
         {
             Id = 2,
             PublicId = Guid.NewGuid(),
-            CompanyName = "Test Company Two",
+            CompanyName = "Demo Company Two",
             DesiredRelease = desiredRelease
         };
 

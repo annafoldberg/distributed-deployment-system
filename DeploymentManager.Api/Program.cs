@@ -1,7 +1,7 @@
-using DeploymentManager.Api.Application.Features.Deployments.Queries;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Queries;
 using FluentValidation;
 using DeploymentManager.Api.Infrastructure.ExternalServices.GitHub;
-using DeploymentManager.Api.Application.Features.Deployments.Interfaces;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Interfaces;
 using System.Net.Http.Headers;
 using Microsoft.Net.Http.Headers;
 using DeploymentManager.Api.Application.Common.Behaviors;

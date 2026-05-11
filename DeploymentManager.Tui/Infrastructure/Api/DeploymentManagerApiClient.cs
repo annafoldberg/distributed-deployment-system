@@ -72,9 +72,7 @@ public sealed class DeploymentManagerApiClient : IDeploymentManagerApiClient
                 desiredVersion, customerId, response.StatusCode);
 
             var errorMessages = await response.Content.ReadFromJsonAsync<List<string>>(ct);
-            
             var errorMessage = errorMessages?.FirstOrDefault() ?? "Failed to update desired version.";
-
             return OperationResult.Failure(errorMessage);
         }
 

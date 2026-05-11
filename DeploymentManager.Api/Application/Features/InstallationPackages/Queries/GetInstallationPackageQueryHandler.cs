@@ -2,16 +2,16 @@ using MediatR;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using DeploymentManager.Api.Application.Common.Interfaces;
-using DeploymentManager.Api.Application.Features.Deployments.Interfaces;
-using DeploymentManager.Api.Application.Features.Deployments.Models;
-using DeploymentManager.Api.Application.Features.Deployments.Errors;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Interfaces;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Dtos;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Errors;
 
-namespace DeploymentManager.Api.Application.Features.Deployments.Queries;
+namespace DeploymentManager.Api.Application.Features.InstallationPackages.Queries;
 
 /// <summary>
 /// Handles retrieval of installation packages for an agent.
 /// </summary>
-public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInstallationPackageQuery, Result<GetInstallationPackageQueryResult>>
+public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInstallationPackageQuery, Result<InstallationPackageDto>>
 {
     private readonly IPackageProvider _provider;
     private readonly IDeploymentManagerDbContext _context;
@@ -24,7 +24,7 @@ public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInst
         _logger = logger;
     }
 
-    public async Task<Result<GetInstallationPackageQueryResult>> Handle(GetInstallationPackageQuery request, CancellationToken ct)
+    public async Task<Result<InstallationPackageDto>> Handle(GetInstallationPackageQuery request, CancellationToken ct)
     {
         var agent = await _context.Agents
             .Include(a => a.Customer)
@@ -44,10 +44,7 @@ public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInst
         if (desiredRelease is null)
         {
             _logger.LogWarning("Customer {CustomerId} has no desired release.", customer.Id);
-            return Result.Ok(new GetInstallationPackageQueryResult
-            {
-                Status = InstallationPackageStatus.DesiredReleaseNotSet
-            });
+            return Result.Fail(new DesiredReleaseNotSetError());
         }
 
         var installation = await _context.Installations
@@ -58,10 +55,7 @@ public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInst
         if (currentRelease is not null && currentRelease.Version == desiredRelease.Version)
         {
             _logger.LogInformation("Version {Version} is already installed for agent {AgentId}.", desiredRelease.Version, agent.PublicId);
-            return Result.Ok(new GetInstallationPackageQueryResult
-            {
-                Status = InstallationPackageStatus.NoUpdateRequired
-            });
+            return Result.Fail(new NoUpdateRequiredError());
         }
 
         var package = await _provider.FetchPackageAsync(platform, desiredRelease.Version, ct);
@@ -71,10 +65,6 @@ public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInst
             return Result.Fail(new PackageNotFoundError());
         }
 
-        return Result.Ok(new GetInstallationPackageQueryResult
-        {
-            Status = InstallationPackageStatus.Available,
-            InstallationPackage = package
-        });
+        return Result.Ok(package);
     }
 }

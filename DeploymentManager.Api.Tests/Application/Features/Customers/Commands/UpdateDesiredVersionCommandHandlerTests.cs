@@ -5,7 +5,6 @@ using DeploymentManager.Api.Application.Common.Interfaces;
 using DeploymentManager.Api.Application.Features.Customers.Commands;
 using DeploymentManager.Api.Domain.Entities;
 using DeploymentManager.Api.Application.Features.Customers.Errors;
-using DeploymentManager.Api.Application.Features.Common.Errors;
 
 namespace DeploymentManager.Api.Tests.Application.Features.Customers.Commands;
 
@@ -115,7 +114,7 @@ public sealed class UpdateDesiredVersionCommandHandlerTests
         {
             Id = 1,
             PublicId = customerId,
-            CompanyName = "Test Company"
+            CompanyName = "Demo Company"
         };
 
         return (customer, release);
@@ -132,6 +131,6 @@ public sealed class UpdateDesiredVersionCommandHandlerTests
                        : new List<Release>{ release }.BuildMockDbSet();
 
         _mockContext.Setup(c => c.Customers).Returns(customers.Object);
-        _mockContext.Setup(c => c.Releases).Returns(releases.Object);
+        _mockContext.Setup(r => r.Releases).Returns(releases.Object);
     }
 }

@@ -1,11 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using DeploymentManager.Api.Application.Features.Deployments.Queries;
+using DeploymentManager.Api.Application.Features.InstallationPackages.Queries;
 using Microsoft.AspNetCore.Authorization;
 using DeploymentManager.Api.Presentation.Extensions;
-using DeploymentManager.Api.Presentation.Contracts;
-using DeploymentManager.Api.Application.Features.Deployments.Commands;
-using DeploymentManager.Api.Application.Features.Deployments.Models;
 
 namespace DeploymentManager.Api.Presentation.Controllers;
 
@@ -27,12 +24,7 @@ public class DeploymentsController : ControllerBase
     /// Retrieves the installation package for an agent.
     /// </summary>
     /// <param name="agentId">Agent identifier.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>
-    /// The installation package file when available,
-    /// no content when no package should be installed,
-    /// otherwise HTTP error response.
-    /// </returns>
+    /// <returns>The installation package file if retrieval succeeds, otherwise HTTP error response.</returns>
     [Authorize(Policy = "Agent")]
     [HttpGet("{agentId}/package")]
     public async Task<IActionResult> GetInstallationPackage([FromRoute] Guid agentId, CancellationToken ct)
@@ -41,42 +33,9 @@ public class DeploymentsController : ControllerBase
         var result = await _mediator.Send(query, ct);
         
         if (result.IsFailed) return result.ToErrorActionResult();
-        
-        if (result.Value.Status != InstallationPackageStatus.Available)
-            return NoContent();
 
-        var package = result.Value.InstallationPackage;
-        if (package is null)
-            return StatusCode(StatusCodes.Status500InternalServerError);
-
-        Response.Headers["X-Release-Version"] = package.Version;
-        return File(package.Content, package.ContentType, package.FileName);   
-
-    }
-
-    /// <summary>
-    /// Reports the result of an installation attempt for an agent.
-    /// </summary>
-    /// <param name="agentId">Agent identifier.</param>
-    /// <param name="result">Installation result.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>Success if the result is handled, otherwise HTTP error response.</returns>
-    [Authorize(Policy = "Agent")]
-    [HttpPost("{agentId}/result")]
-    public async Task<IActionResult> ReportInstallationResult(
-        [FromRoute] Guid agentId,
-        [FromBody] InstallationResultDto installationResult,
-        CancellationToken ct)
-    {
-        var command = new ReportInstallationResultCommand(
-            agentId,
-            installationResult.Succeeded,
-            installationResult.InstalledVersion,
-            installationResult.ErrorMessage);
-
-        var result = await _mediator.Send(command, ct);
-        
-        return result.ToActionResult();
+        var package = result.Value;
+        return File(package.Content, package.ContentType, package.FileName);
     }
 }
 

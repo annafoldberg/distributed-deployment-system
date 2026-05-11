@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace DeploymentManager.Api.Application.Features.Deployments.Queries;
+namespace DeploymentManager.Api.Application.Features.InstallationPackages.Queries;
 
 public sealed class GetInstallationPackageQueryValidator : AbstractValidator<GetInstallationPackageQuery>
 {

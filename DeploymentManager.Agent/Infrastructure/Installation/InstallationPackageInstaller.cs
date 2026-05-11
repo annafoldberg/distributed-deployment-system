@@ -33,12 +33,6 @@ public sealed class InstallationPackageInstaller : IPackageInstaller
             return InstallationResult.Failed;
         }
 
-        if (string.IsNullOrWhiteSpace(package.Version))
-        {
-            _logger.LogWarning("Invalid package version.");
-            return InstallationResult.Failed;
-        }
-
         var fileName = Path.GetFileName(package.FileName);
         
         if (string.IsNullOrWhiteSpace(fileName))
@@ -191,6 +185,8 @@ public sealed class InstallationPackageInstaller : IPackageInstaller
             }
         }
     }
+
+
 
     /// <summary>
     /// Extracts zip contents safely while guarding against path traversal attacks.
