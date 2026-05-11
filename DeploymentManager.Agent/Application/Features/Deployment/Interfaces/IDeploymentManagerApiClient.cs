@@ -1,5 +1,6 @@
 
 using DeploymentManager.Agent.Application.Features.Deployment.Models;
+using DeploymentManager.Agent.Application.Features.Deployment.Results;
 
 namespace DeploymentManager.Agent.Application.Features.Deployment.Interfaces;
 
@@ -11,5 +12,10 @@ public interface IDeploymentManagerApiClient
     /// <summary>
     /// Retrieves installation packages from Deployment Manager API.
     /// </summary>
-    Task<InstallationPackage?> GetInstallationPackageAsync(CancellationToken ct);
+    Task<InstallationPackageRetrievalResult> GetInstallationPackageAsync(CancellationToken ct);
+
+    /// <summary>
+    /// Reports the result of an installation attempt to Deployment Manager API.
+    /// </summary>
+    Task ReportInstallationResultAsync(bool succeeded, string? installedVersion, string? errorMessage, CancellationToken ct);
 }

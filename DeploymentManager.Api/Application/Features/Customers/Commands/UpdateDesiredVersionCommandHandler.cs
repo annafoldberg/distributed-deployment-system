@@ -3,6 +3,7 @@ using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using DeploymentManager.Api.Application.Common.Interfaces;
 using DeploymentManager.Api.Application.Features.Customers.Errors;
+using DeploymentManager.Api.Application.Features.Common.Errors;
 
 namespace DeploymentManager.Api.Application.Features.Customers.Commands;
 
@@ -33,8 +34,7 @@ public sealed class UpdateDesiredVersionCommandHandler : IRequestHandler<UpdateD
         }
 
         var desiredRelease = await _context.Releases
-            .Where(r => r.Version == request.DesiredVersion)
-            .FirstOrDefaultAsync(ct);
+            .FirstOrDefaultAsync(r => r.Version == request.DesiredVersion, ct);
             
         if (desiredRelease is null)
         {

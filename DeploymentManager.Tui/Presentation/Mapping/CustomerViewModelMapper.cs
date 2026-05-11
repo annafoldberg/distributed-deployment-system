@@ -29,13 +29,14 @@ public static class CustomerViewModelMapper
     {
         var versions = customer.Agents
                        .Select(a => a.CurrentVersion)
+                       .Where(v => Version.TryParse(v, out _))
                        .Distinct()
                        .OrderBy(v => Version.Parse(v))
                        .ToList();
 
         return versions.Count switch
         {
-            0 => "None",
+            0 => string.Empty,
             1 => versions[0],
             _ => $"{versions.First()} → {versions.Last()}"
         };

@@ -1,9 +1,8 @@
 namespace DeploymentManager.Agent.Application.Features.Deployment.Results;
 
-public enum DeploymentResult
+public enum PackageRetrievalStatus
 {
-    Succeeded,
+    UpdateAvailable,
     NoUpdateRequired,
-    RetrievalFailed,
-    InstallationFailed
+    Failed
 }
