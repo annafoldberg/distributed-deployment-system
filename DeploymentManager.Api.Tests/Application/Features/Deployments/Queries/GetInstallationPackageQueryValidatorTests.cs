@@ -1,6 +1,6 @@
-using DeploymentManager.Api.Application.Features.InstallationPackages.Queries;
+using DeploymentManager.Api.Application.Features.Deployments.Queries;
 
-namespace DeploymentManager.Api.Tests.Application.Features.InstallationPackages.Queries;
+namespace DeploymentManager.Api.Tests.Application.Features.Deployments.Queries;
 
 [TestClass]
 public sealed class GetInstallationPackageQueryValidatorTests

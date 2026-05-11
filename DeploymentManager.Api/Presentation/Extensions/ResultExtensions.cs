@@ -1,5 +1,6 @@
+using DeploymentManager.Api.Application.Features.Common.Errors;
 using DeploymentManager.Api.Application.Features.Customers.Errors;
-using DeploymentManager.Api.Application.Features.InstallationPackages.Errors;
+using DeploymentManager.Api.Application.Features.Deployments.Errors;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -50,12 +51,6 @@ public static class ResultExtensions
 
         if (result.HasError<AgentNotFoundError>())
             return new NotFoundObjectResult(errorMessages);
-
-        if (result.HasError<DesiredReleaseNotSetError>())
-            return new BadRequestObjectResult(errorMessages);
-
-        if (result.HasError<NoUpdateRequiredError>())
-            return new BadRequestObjectResult(errorMessages);
 
         if (result.HasError<PackageNotFoundError>())
             return new NotFoundObjectResult(errorMessages);

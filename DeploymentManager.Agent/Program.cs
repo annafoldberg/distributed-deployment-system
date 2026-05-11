@@ -21,6 +21,15 @@ builder.Services
         "Agent identity configuration is incomplete.")
     .ValidateOnStart();
 
+// Configure deployment worker
+builder.Services
+    .AddOptions<DeploymentWorkerOptions>()
+    .Bind(builder.Configuration.GetSection(DeploymentWorkerOptions.SectionName))
+    .Validate(options =>
+        options.IntervalSeconds > 0,
+        "Deployment worker configuration is invalid: Interval must be greater than 0.")
+    .ValidateOnStart();
+
 // Configure API
 builder.Services
     .AddOptions<ApiOptions>()
