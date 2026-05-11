@@ -23,24 +23,42 @@ public sealed class DeploymentOrchestrator
     /// </summary>
     public async Task<DeploymentResult> ExecuteAsync(CancellationToken ct)
     {
-        var installationPackage = await _apiClient.GetInstallationPackageAsync(ct);
-        if (installationPackage is null)
+        var result = await _apiClient.GetInstallationPackageAsync(ct);
+        
+        if (result.Status == PackageRetrievalStatus.Failed)
         {
-            var errorMessage = "Failed to retrieve installation package.";
-            _logger.LogWarning(errorMessage);
-            await _apiClient.ReportInstallationResultAsync(false, null, errorMessage, ct);
+            _logger.LogWarning("Failed to retrieve installation package.");
             return DeploymentResult.RetrievalFailed;
         }
 
-        var installationResult = await _packageInstaller.InstallPackageAsync(installationPackage, ct);
-        if (installationResult == InstallationResult.Failed)
+        if (result.Status == PackageRetrievalStatus.NoUpdateRequired)
         {
-            var errorMessage = "Failed to install package.";
-            _logger.LogWarning(errorMessage);
-            await _apiClient.ReportInstallationResultAsync(false, null, errorMessage, ct);
-            return DeploymentResult.InstallationFailed;
+            _logger.LogInformation("No update required.");
+            return DeploymentResult.NoUpdateRequired;
         }
-        await _apiClient.ReportInstallationResultAsync(true, installationPackage.Version, null, ct);
-        return DeploymentResult.Succeeded;
+
+        if (result.Status == PackageRetrievalStatus.UpdateAvailable)
+        {
+            if (result.InstallationPackage is null)
+            {
+                _logger.LogError("Update available, but installation package was null.");
+                return DeploymentResult.RetrievalFailed;
+            }
+
+            var installationResult = await _packageInstaller.InstallPackageAsync(result.InstallationPackage, ct);
+            if (installationResult == InstallationResult.Failed)
+            {
+                var errorMessage = "Failed to install package.";
+                _logger.LogWarning(errorMessage);
+                await _apiClient.ReportInstallationResultAsync(false, null, errorMessage, ct);
+                return DeploymentResult.InstallationFailed;
+            }
+
+            await _apiClient.ReportInstallationResultAsync(true, result.InstallationPackage.Version, null, ct);
+            return DeploymentResult.Succeeded;
+        }
+
+        _logger.LogWarning("Unknown package retrieval status: {Status}.", result.Status);
+        return DeploymentResult.RetrievalFailed;
     }
 }

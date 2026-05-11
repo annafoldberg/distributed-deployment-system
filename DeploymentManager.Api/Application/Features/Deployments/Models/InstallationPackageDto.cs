@@ -1,4 +1,4 @@
-namespace DeploymentManager.Api.Application.Features.Deployments.Dtos;
+namespace DeploymentManager.Api.Application.Features.Deployments.Models;
 
 /// <summary>
 /// Data transfer object for an installation package.

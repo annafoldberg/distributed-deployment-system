@@ -36,7 +36,7 @@ public static class CustomerViewModelMapper
 
         return versions.Count switch
         {
-            0 => "None",
+            0 => string.Empty,
             1 => versions[0],
             _ => $"{versions.First()} → {versions.Last()}"
         };

@@ -3,7 +3,7 @@ using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using DeploymentManager.Api.Application.Common.Interfaces;
 using DeploymentManager.Api.Application.Features.Deployments.Interfaces;
-using DeploymentManager.Api.Application.Features.Deployments.Dtos;
+using DeploymentManager.Api.Application.Features.Deployments.Models;
 using DeploymentManager.Api.Application.Features.Deployments.Errors;
 
 namespace DeploymentManager.Api.Application.Features.Deployments.Queries;
@@ -11,7 +11,7 @@ namespace DeploymentManager.Api.Application.Features.Deployments.Queries;
 /// <summary>
 /// Handles retrieval of installation packages for an agent.
 /// </summary>
-public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInstallationPackageQuery, Result<InstallationPackageDto>>
+public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInstallationPackageQuery, Result<GetInstallationPackageQueryResult>>
 {
     private readonly IPackageProvider _provider;
     private readonly IDeploymentManagerDbContext _context;
@@ -24,7 +24,7 @@ public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInst
         _logger = logger;
     }
 
-    public async Task<Result<InstallationPackageDto>> Handle(GetInstallationPackageQuery request, CancellationToken ct)
+    public async Task<Result<GetInstallationPackageQueryResult>> Handle(GetInstallationPackageQuery request, CancellationToken ct)
     {
         var agent = await _context.Agents
             .Include(a => a.Customer)
@@ -44,7 +44,10 @@ public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInst
         if (desiredRelease is null)
         {
             _logger.LogWarning("Customer {CustomerId} has no desired release.", customer.Id);
-            return Result.Fail(new DesiredReleaseNotSetError());
+            return Result.Ok(new GetInstallationPackageQueryResult
+            {
+                Status = InstallationPackageStatus.DesiredReleaseNotSet
+            });
         }
 
         var installation = await _context.Installations
@@ -55,7 +58,10 @@ public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInst
         if (currentRelease is not null && currentRelease.Version == desiredRelease.Version)
         {
             _logger.LogInformation("Version {Version} is already installed for agent {AgentId}.", desiredRelease.Version, agent.PublicId);
-            return Result.Fail(new NoUpdateRequiredError());
+            return Result.Ok(new GetInstallationPackageQueryResult
+            {
+                Status = InstallationPackageStatus.NoUpdateRequired
+            });
         }
 
         var package = await _provider.FetchPackageAsync(platform, desiredRelease.Version, ct);
@@ -64,7 +70,11 @@ public sealed class GetInstallationPackageQueryHandler : IRequestHandler<GetInst
             _logger.LogWarning("Package for platform {Platform} with version {Version} not found.", platform, desiredRelease.Version);
             return Result.Fail(new PackageNotFoundError());
         }
-        
-        return Result.Ok(package);
+
+        return Result.Ok(new GetInstallationPackageQueryResult
+        {
+            Status = InstallationPackageStatus.Available,
+            InstallationPackage = package
+        });
     }
 }

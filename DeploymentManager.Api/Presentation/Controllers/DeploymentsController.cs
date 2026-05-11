@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using DeploymentManager.Api.Presentation.Extensions;
 using DeploymentManager.Api.Presentation.Contracts;
 using DeploymentManager.Api.Application.Features.Deployments.Commands;
+using DeploymentManager.Api.Application.Features.Deployments.Models;
 
 namespace DeploymentManager.Api.Presentation.Controllers;
 
@@ -27,7 +28,11 @@ public class DeploymentsController : ControllerBase
     /// </summary>
     /// <param name="agentId">Agent identifier.</param>
     /// <param name="ct">Cancellation token.</param>
-    /// <returns>The installation package file if retrieval succeeds, otherwise HTTP error response.</returns>
+    /// <returns>
+    /// The installation package file when available,
+    /// no content when no package should be installed,
+    /// otherwise HTTP error response.
+    /// </returns>
     [Authorize(Policy = "Agent")]
     [HttpGet("{agentId}/package")]
     public async Task<IActionResult> GetInstallationPackage([FromRoute] Guid agentId, CancellationToken ct)
@@ -36,10 +41,17 @@ public class DeploymentsController : ControllerBase
         var result = await _mediator.Send(query, ct);
         
         if (result.IsFailed) return result.ToErrorActionResult();
+        
+        if (result.Value.Status != InstallationPackageStatus.Available)
+            return NoContent();
 
-        var package = result.Value;
+        var package = result.Value.InstallationPackage;
+        if (package is null)
+            return StatusCode(StatusCodes.Status500InternalServerError);
+
         Response.Headers["X-Release-Version"] = package.Version;
-        return File(package.Content, package.ContentType, package.FileName);
+        return File(package.Content, package.ContentType, package.FileName);   
+
     }
 
     /// <summary>

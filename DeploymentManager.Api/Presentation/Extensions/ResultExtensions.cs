@@ -52,12 +52,6 @@ public static class ResultExtensions
         if (result.HasError<AgentNotFoundError>())
             return new NotFoundObjectResult(errorMessages);
 
-        if (result.HasError<DesiredReleaseNotSetError>())
-            return new BadRequestObjectResult(errorMessages);
-
-        if (result.HasError<NoUpdateRequiredError>())
-            return new BadRequestObjectResult(errorMessages);
-
         if (result.HasError<PackageNotFoundError>())
             return new NotFoundObjectResult(errorMessages);
 
