@@ -1,4 +1,6 @@
 using DeploymentManager.Agent.Application.Features.Deployment;
+using DeploymentManager.Agent.Infrastructure.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace DeploymentManager.Agent.Workers;
 
@@ -8,17 +10,18 @@ namespace DeploymentManager.Agent.Workers;
 public sealed class DeploymentWorker : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly DeploymentWorkerOptions _options;
     private readonly ILogger<DeploymentWorker> _logger;
 
-    public DeploymentWorker(IServiceScopeFactory scopeFactory, ILogger<DeploymentWorker> logger)
+    public DeploymentWorker(IServiceScopeFactory scopeFactory, IOptions<DeploymentWorkerOptions> options, ILogger<DeploymentWorker> logger)
     {
         _scopeFactory = scopeFactory;
+        _options = options.Value;
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Temporary flow to test feature flow
         while (!stoppingToken.IsCancellationRequested)
         {
             _logger.LogInformation("Deployment worker running at: {Time}", DateTimeOffset.Now);
@@ -30,7 +33,7 @@ public sealed class DeploymentWorker : BackgroundService
 
             _logger.LogInformation("Deployment finished with result: {Result}.", result);
 
-            await Task.Delay(TimeSpan.FromMinutes(2), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(_options.IntervalSeconds), stoppingToken);
         }
     }
 
