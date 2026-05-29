@@ -18,6 +18,7 @@ using DeploymentManager.Api.Domain.Entities;
 using Microsoft.AspNetCore.Authentication;
 using DeploymentManager.Api.Presentation.Authentication;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using DeploymentManager.Api.Infrastructure.Persistence.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -142,6 +143,8 @@ builder.Services.AddHttpClient<IPackageProvider, GitHubPackageProvider>((service
     httpClient.DefaultRequestHeaders.Add(HeaderNames.UserAgent, "DeploymentManager.Api");
     httpClient.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/vnd.github+json");
 });
+
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();

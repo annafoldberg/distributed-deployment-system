@@ -1,4 +1,3 @@
-using DeploymentManager.Tui.Presentation.Enums;
 using DeploymentManager.Tui.Presentation.ViewModels;
 
 namespace DeploymentManager.Tui.Presentation.Menus.Agents;
@@ -9,5 +8,6 @@ namespace DeploymentManager.Tui.Presentation.Menus.Agents;
 public sealed class AgentsLiveResult
 {
     public CustomerViewModel Customer { get; init; } = null!;
+    public List<AgentViewModel> Agents { get; init; } = null!;
     public AgentsMenuAction Action { get; init; }
 }
