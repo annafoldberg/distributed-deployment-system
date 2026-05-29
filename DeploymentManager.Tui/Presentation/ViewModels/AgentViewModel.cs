@@ -1,5 +1,3 @@
-using DeploymentManager.Tui.Presentation.Enums;
-
 namespace DeploymentManager.Tui.Presentation.ViewModels;
 
 /// <summary>

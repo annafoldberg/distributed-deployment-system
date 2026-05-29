@@ -13,7 +13,7 @@ namespace DeploymentManager.Api.Presentation.Controllers;
 /// Exposes deployment endpoints.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/deployments")]
 public class DeploymentsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -50,8 +50,7 @@ public class DeploymentsController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError);
 
         Response.Headers["X-Release-Version"] = package.Version;
-        return File(package.Content, package.ContentType, package.FileName);   
-
+        return File(package.Content, package.ContentType, package.FileName);
     }
 
     /// <summary>

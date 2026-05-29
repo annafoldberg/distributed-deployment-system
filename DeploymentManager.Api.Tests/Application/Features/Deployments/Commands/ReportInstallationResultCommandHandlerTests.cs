@@ -6,6 +6,7 @@ using DeploymentManager.Api.Domain.Entities;
 using DeploymentManager.Api.Application.Features.Common.Errors;
 using DeploymentManager.Api.Application.Features.Deployments.Commands;
 using DeploymentManager.Api.Application.Features.Deployments.Errors;
+using DeploymentManager.Api.Domain.Enums;
 
 namespace DeploymentManager.Api.Tests.Application.Features.Deployments.Commands;
 
@@ -13,14 +14,16 @@ namespace DeploymentManager.Api.Tests.Application.Features.Deployments.Commands;
 public sealed class ReportInstallationResultCommandHandlerTests
 {
     private Mock<IDeploymentManagerDbContext> _mockContext = null!;
+    private Mock<IAuditLogService> _mockAuditLogService = null!;
     private ReportInstallationResultCommandHandler _handler = null!;
 
     [TestInitialize]
     public void TestInitialize()
     {
         _mockContext = new Mock<IDeploymentManagerDbContext>();
+        _mockAuditLogService = new Mock<IAuditLogService>();
         var logger = Mock.Of<ILogger<ReportInstallationResultCommandHandler>>();
-        _handler = new ReportInstallationResultCommandHandler(_mockContext.Object, logger);
+        _handler = new ReportInstallationResultCommandHandler(_mockContext.Object, _mockAuditLogService.Object, logger);
     }
 
     [TestMethod]
@@ -45,7 +48,14 @@ public sealed class ReportInstallationResultCommandHandlerTests
                 i.AgentId == agent.Id &&
                 i.ReleaseId == installedRelease!.Id)),
             Times.Once);
-        _mockContext.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockContext.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _mockAuditLogService.Verify(s =>
+            s.AddAgentLogAsync(
+                agent.Id,
+                AuditLogLevel.Information,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once());
     }
 
     [TestMethod]
@@ -69,10 +79,17 @@ public sealed class ReportInstallationResultCommandHandlerTests
         Assert.AreEqual(installedRelease!.Id, installation!.ReleaseId);
         _mockContext.Verify(c => c.Installations.Add(It.IsAny<Installation>()), Times.Never);
         _mockContext.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockAuditLogService.Verify(s =>
+            s.AddAgentLogAsync(
+                agent.Id,
+                AuditLogLevel.Information,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once());
     }
 
     [TestMethod]
-    public async Task Handle_AgentExistsAndInstallationIsAlreadyInstalled_ReturnsSuccess()
+    public async Task Handle_AgentExistsAndInstallationIsAlreadyInstalled_ReturnsOkResult()
     {
         // Arrange
         var agentId = Guid.NewGuid();
@@ -90,10 +107,17 @@ public sealed class ReportInstallationResultCommandHandlerTests
         Assert.IsTrue(result.IsSuccess);
         _mockContext.Verify(c => c.Installations.Add(It.IsAny<Installation>()), Times.Never);
         _mockContext.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockAuditLogService.Verify(s =>
+            s.AddAgentLogAsync(
+                agent.Id,
+                AuditLogLevel.Information,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once());
     }
 
     [TestMethod]
-    public async Task Handle_InstallationFailed_ReturnsSuccess()
+    public async Task Handle_InstallationFailed_ReturnsOkResult()
     {
         // Arrange
         var agentId = Guid.NewGuid();
@@ -112,6 +136,13 @@ public sealed class ReportInstallationResultCommandHandlerTests
         // Assert
         Assert.IsTrue(result.IsSuccess);
         _mockContext.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _mockAuditLogService.Verify(s =>
+            s.AddAgentLogAsync(
+                agent.Id,
+                AuditLogLevel.Warning,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once());
     }
 
     [TestMethod]
@@ -135,6 +166,13 @@ public sealed class ReportInstallationResultCommandHandlerTests
         Assert.HasCount(1, result.Errors);
         Assert.IsInstanceOfType(result.Errors[0], typeof(AgentNotFoundError));
         _mockContext.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _mockAuditLogService.Verify(s =>
+            s.AddAgentLogAsync(
+                It.IsAny<int>(),
+                It.IsAny<AuditLogLevel>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never());
     }
 
     [TestMethod]
@@ -158,6 +196,13 @@ public sealed class ReportInstallationResultCommandHandlerTests
         Assert.HasCount(1, result.Errors);
         Assert.IsInstanceOfType(result.Errors[0], typeof(ReleaseNotFoundError));
         _mockContext.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _mockAuditLogService.Verify(s =>
+            s.AddAgentLogAsync(
+                agent.Id,
+                AuditLogLevel.Warning,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once());
     }
 
     // -------------------- Helper Methods --------------------

@@ -12,5 +12,6 @@ public interface IDeploymentManagerDbContext
     DbSet<Customer> Customers { get; }
     DbSet<Installation> Installations { get; }
     DbSet<Release> Releases { get; }
+    DbSet<AuditLog> AuditLogs { get; }
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

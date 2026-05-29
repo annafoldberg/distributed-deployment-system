@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using DeploymentManager.Tui.Application.Features.AuditLogs.Models;
 using DeploymentManager.Tui.Application.Features.Customers.Interfaces;
 using DeploymentManager.Tui.Application.Features.Customers.Models;
 using Microsoft.Extensions.Logging;
@@ -79,6 +80,48 @@ public sealed class DeploymentManagerApiClient : IDeploymentManagerApiClient
         }
 
         return OperationResult.Success();
+    }
+
+    public async Task<List<AuditLog>?> GetCustomerAuditLogsAsync(Guid customerId, CancellationToken ct)
+    {
+        var requestUri = $"audit-logs/customers/{customerId}";
+        using var response = await _httpClient.GetAsync(requestUri, ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Failed to retrieve customer audit logs. Status code: {StatusCode}.", response.StatusCode);
+            return null;
+        }
+
+        var auditLogs = await response.Content.ReadFromJsonAsync<List<AuditLog>>(ct);
+        if (auditLogs is null)
+        {
+            _logger.LogWarning("Customer audit logs response could not be deserialized.");
+            return null;
+        }
+
+        return auditLogs;
+    }
+
+    public async Task<List<AuditLog>?> GetAgentAuditLogsAsync(Guid agentId, CancellationToken ct)
+    {
+        var requestUri = $"audit-logs/agents/{agentId}";
+        using var response = await _httpClient.GetAsync(requestUri, ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Failed to retrieve agent audit logs. Status code: {StatusCode}.", response.StatusCode);
+            return null;
+        }
+
+        var auditLogs = await response.Content.ReadFromJsonAsync<List<AuditLog>>(ct);
+        if (auditLogs is null)
+        {
+            _logger.LogWarning("Agent audit logs response could not be deserialized.");
+            return null;
+        }
+
+        return auditLogs;
     }
 }
 

@@ -1,10 +1,10 @@
 using DeploymentManager.Tui.Application.Features.Customers;
-using DeploymentManager.Tui.Presentation.Enums;
 using DeploymentManager.Tui.Presentation.Mapping;
 using DeploymentManager.Tui.Presentation.Menus.Agents;
 using DeploymentManager.Tui.Presentation.Rendering;
 using DeploymentManager.Tui.Presentation.ViewModels;
 using Spectre.Console;
+using Spectre.Console.Rendering;
 
 namespace DeploymentManager.Tui.Presentation.Menus.Customers;
 
@@ -73,7 +73,6 @@ public sealed class CustomersMenu
                         lastFetch = DateTimeOffset.UtcNow;
                         message = fetchResult.Message;
                     }
-                    else message = null;
 
                     ctx.UpdateTarget(BuildLiveView(customers, message, lastFetch, refreshInterval));
                     ctx.Refresh();
@@ -106,12 +105,10 @@ public sealed class CustomersMenu
             ? 0
             : Math.Max(0, (int)(refreshInterval - (DateTimeOffset.UtcNow - lastFetch)).TotalSeconds);
 
-        var status = message is not null
-            ? message
-            : $"[Red3_1]•[/] [Grey70]Live data · next refresh in {nextUpdateIn}s[/]";
+        var status = $"[Red3_1]•[/] [Grey70]Live data · next refresh in {nextUpdateIn}s[/]";
 
         var context = "Customers";
-        var content = BuildCustomersTable(customers);
+        IRenderable content = !customers.Any() && message is not null ? new Markup(message) : BuildCustomersTable(customers);
         var actions = "[DeepPink3_1]<S>[/] Select  [dim]<Q>[/] Quit";
 
         return ConsoleLayout.Build(status, context, content, actions);
@@ -152,9 +149,12 @@ public sealed class CustomersMenu
         var context = "[Purple_2]<↑ ↓>[/] Navigate  [Green3_1]<Enter>[/] Select";
 
         ConsoleLayout.WriteHeader(status, context);
-
+        
+        var selectionIndent = "  ";
+        
         AnsiConsole.MarkupLine(
-            $"{"Company".PadLeft(2).PadRight(20)}" +
+            selectionIndent +
+            $"{"Company".PadRight(20)}" +
             $"{"Agents".PadRight(10)}" +
             $"{"Current Version".PadRight(20)}" +
             $"{"Desired Version"}");

@@ -7,6 +7,8 @@ using DeploymentManager.Api.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
 using DeploymentManager.Api.Domain.Entities;
 using DeploymentManager.Api.Application.Features.Deployments.Errors;
+using DeploymentManager.Api.Domain.Enums;
+using DeploymentManager.Api.Application.Features.Common.Errors;
 
 namespace DeploymentManager.Api.Tests.Application.Features.Deployments.Queries;
 
@@ -15,6 +17,7 @@ public sealed class GetInstallationPackageQueryHandlerTests
 {
     private Mock<IPackageProvider> _mockProvider = null!;
     private Mock<IDeploymentManagerDbContext> _mockContext = null!;
+    private Mock<IAuditLogService> _mockAuditLogService = null!;
     private GetInstallationPackageQueryHandler _handler = null!;
 
     [TestInitialize]
@@ -22,8 +25,9 @@ public sealed class GetInstallationPackageQueryHandlerTests
     {
         _mockProvider = new Mock<IPackageProvider>();
         _mockContext = new Mock<IDeploymentManagerDbContext>();
+        _mockAuditLogService = new Mock<IAuditLogService>();
         var logger = Mock.Of<ILogger<GetInstallationPackageQueryHandler>>();
-        _handler = new GetInstallationPackageQueryHandler(_mockProvider.Object, _mockContext.Object, logger);
+        _handler = new GetInstallationPackageQueryHandler(_mockProvider.Object, _mockContext.Object, _mockAuditLogService.Object, logger);
     }
 
     [TestMethod]
@@ -56,6 +60,13 @@ public sealed class GetInstallationPackageQueryHandlerTests
         Assert.AreEqual(package, result.Value.InstallationPackage);
         _mockProvider.Verify(p =>
             p.FetchPackageAsync("osx-arm64", "2.0.0", It.IsAny<CancellationToken>()),
+            Times.Once());
+        _mockAuditLogService.Verify(s =>
+            s.AddAgentLogAsync(
+                agent.Id,
+                AuditLogLevel.Information,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
             Times.Once());
     }
 
@@ -90,6 +101,13 @@ public sealed class GetInstallationPackageQueryHandlerTests
         _mockProvider.Verify(p =>
             p.FetchPackageAsync("osx-arm64", "2.0.0", It.IsAny<CancellationToken>()),
             Times.Once());
+        _mockAuditLogService.Verify(s =>
+            s.AddAgentLogAsync(
+                agent.Id,
+                AuditLogLevel.Information,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once());
     }
 
     [TestMethod]
@@ -110,6 +128,13 @@ public sealed class GetInstallationPackageQueryHandlerTests
         Assert.IsInstanceOfType(result.Errors[0], typeof(AgentNotFoundError));
         _mockProvider.Verify(p =>
             p.FetchPackageAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never());
+        _mockAuditLogService.Verify(s =>
+            s.AddAgentLogAsync(
+                It.IsAny<int>(),
+                It.IsAny<AuditLogLevel>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
             Times.Never());
     }
 
@@ -133,6 +158,13 @@ public sealed class GetInstallationPackageQueryHandlerTests
         _mockProvider.Verify(p =>
             p.FetchPackageAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never());
+        _mockAuditLogService.Verify(s =>
+            s.AddAgentLogAsync(
+                agent.Id,
+                AuditLogLevel.Information,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once());
     }
 
     [TestMethod]
@@ -155,6 +187,13 @@ public sealed class GetInstallationPackageQueryHandlerTests
         _mockProvider.Verify(p =>
             p.FetchPackageAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never());
+        _mockAuditLogService.Verify(s =>
+            s.AddAgentLogAsync(
+                agent.Id,
+                AuditLogLevel.Information,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once());
     }
 
     [TestMethod]
@@ -180,6 +219,13 @@ public sealed class GetInstallationPackageQueryHandlerTests
         Assert.IsInstanceOfType(result.Errors[0], typeof(PackageNotFoundError));
         _mockProvider.Verify(p =>
             p.FetchPackageAsync("osx-arm64", "2.0.0", It.IsAny<CancellationToken>()),
+            Times.Once());
+        _mockAuditLogService.Verify(s =>
+            s.AddAgentLogAsync(
+                agent.Id,
+                AuditLogLevel.Warning,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
             Times.Once());
     }
 

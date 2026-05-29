@@ -1,8 +1,10 @@
-﻿using DeploymentManager.Tui.Application.Features.Customers;
+﻿using DeploymentManager.Tui.Application.Features.AuditLogs;
+using DeploymentManager.Tui.Application.Features.Customers;
 using DeploymentManager.Tui.Application.Features.Customers.Interfaces;
 using DeploymentManager.Tui.Infrastructure.Api;
 using DeploymentManager.Tui.Infrastructure.Configuration;
 using DeploymentManager.Tui.Presentation.Menus.Agents;
+using DeploymentManager.Tui.Presentation.Menus.AuditLogs;
 using DeploymentManager.Tui.Presentation.Menus.Customers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -45,8 +47,11 @@ builder.Services.AddHttpClient<IDeploymentManagerApiClient, DeploymentManagerApi
 });
 
 builder.Services.AddTransient<ICustomersService, CustomersService>();
+builder.Services.AddTransient<IAuditLogsService, AuditLogsService>();
+
 builder.Services.AddTransient<CustomersMenu>();
 builder.Services.AddTransient<AgentsMenu>();
+builder.Services.AddTransient<AuditLogsMenu>();
 
 builder.Logging.ClearProviders();
 builder.Logging.AddDebug();
