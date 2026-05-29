@@ -36,10 +36,7 @@ public class GitHubPackageProvider : IPackageProvider
         }
 
         // Get release metadata
-        GitHubReleaseDto? release =
-            version == "latest"
-                ? await GetReleaseLatestAsync(ct)
-                : await GetReleaseByTagAsync(version, ct);
+        GitHubReleaseDto? release = await GetReleaseByTagAsync(version, ct);
 
         if (release == null) return null;
 
@@ -83,22 +80,6 @@ public class GitHubPackageProvider : IPackageProvider
             return null;
         }
         return await response.Content.ReadFromJsonAsync<GitHubReleaseDto>(ct);        
-    }
-
-    /// <summary>
-    /// Retrieves metadata for the latest release.
-    /// </summary>
-    /// <returns>The release metadata if found, otherwise <c>null</c>.</returns>
-    private async Task<GitHubReleaseDto?> GetReleaseLatestAsync(CancellationToken ct)
-    {
-        var response = await _httpClient.GetAsync($"{_releasesPath}/latest", ct);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            _logger.LogWarning("Could not retrieve latest GitHub release");
-            return null;
-        }
-        return await response.Content.ReadFromJsonAsync<GitHubReleaseDto>(ct);
     }
 
     private async Task<Stream?> DownloadAssetAsync(string downloadUrl, CancellationToken ct)
