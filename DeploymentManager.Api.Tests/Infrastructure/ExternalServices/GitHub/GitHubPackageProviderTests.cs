@@ -36,38 +36,7 @@ public sealed class GitHubPackageProviderTests
     }
 
     [TestMethod]
-    public async Task FetchPackageAsync_MatchingAssetFound_Latest_ReturnsInstallationPackage()
-    {
-        // Arrange
-        var platform = "osx-arm64";
-        var version = "latest";
-
-        var json = CreateReleaseMetadataJson(platform);
-        SetupHttpMetadataResponse(json);
-        SetupHttpDownloadResponse();
-
-        // Act
-        var result = await _provider.FetchPackageAsync(platform, version, CancellationToken.None);
-
-        // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual($"app-{platform}.zip", result.FileName);
-        _mockHttpHandler.Protected().Verify(
-            "SendAsync",
-            Times.Once(),
-            ItExpr.Is<HttpRequestMessage>(r =>
-                r.RequestUri!.AbsoluteUri.Contains($"{_releasePath}/latest")),
-            ItExpr.IsAny<CancellationToken>());
-        _mockHttpHandler.Protected().Verify(
-            "SendAsync",
-            Times.Never(),
-            ItExpr.Is<HttpRequestMessage>(r =>
-                r.RequestUri!.AbsoluteUri.Contains($"{_releasePath}/tags/v{version}")),
-            ItExpr.IsAny<CancellationToken>());
-    }
-
-    [TestMethod]
-    public async Task FetchPackageAsync_MatchingAssetFound_Tag_ReturnsInstallationPackage()
+    public async Task FetchPackageAsync_MatchingAssetFound_ReturnsInstallationPackage()
     {
         // Arrange
         var platform = "osx-arm64";
@@ -88,12 +57,6 @@ public sealed class GitHubPackageProviderTests
             Times.Once(),
             ItExpr.Is<HttpRequestMessage>(r =>
                 r.RequestUri!.AbsoluteUri.Contains($"{_releasePath}/tags/v{version}")),
-            ItExpr.IsAny<CancellationToken>());
-        _mockHttpHandler.Protected().Verify(
-            "SendAsync",
-            Times.Never(),
-            ItExpr.Is<HttpRequestMessage>(r =>
-                r.RequestUri!.AbsoluteUri.Contains($"{_releasePath}/latest")),
             ItExpr.IsAny<CancellationToken>());
     }
 

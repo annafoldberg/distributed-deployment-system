@@ -1,11 +1,9 @@
-using DeploymentManager.Agent;
 using DeploymentManager.Agent.Application.Features.Deployment;
 using DeploymentManager.Agent.Application.Features.Deployment.Interfaces;
-using DeploymentManager.Agent.Application.Features.Deployment.Models;
 using DeploymentManager.Agent.Infrastructure.Api;
 using DeploymentManager.Agent.Infrastructure.Configuration;
 using DeploymentManager.Agent.Infrastructure.Installation;
-using DeploymentManager.Agent.Workers;
+using DeploymentManager.Agent.Presentation;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 
