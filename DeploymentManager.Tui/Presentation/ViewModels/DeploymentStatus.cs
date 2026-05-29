@@ -1,4 +1,4 @@
-namespace DeploymentManager.Tui.Presentation.Enums;
+namespace DeploymentManager.Tui.Presentation.ViewModels;
 
 public enum DeploymentStatus
 {

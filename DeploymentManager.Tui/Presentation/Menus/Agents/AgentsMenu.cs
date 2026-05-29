@@ -1,10 +1,11 @@
 using System.Text.RegularExpressions;
 using DeploymentManager.Tui.Application.Features.Customers;
-using DeploymentManager.Tui.Presentation.Enums;
 using DeploymentManager.Tui.Presentation.Mapping;
+using DeploymentManager.Tui.Presentation.Menus.AuditLogs;
 using DeploymentManager.Tui.Presentation.Rendering;
 using DeploymentManager.Tui.Presentation.ViewModels;
 using Spectre.Console;
+using Spectre.Console.Rendering;
 
 namespace DeploymentManager.Tui.Presentation.Menus.Agents;
 
@@ -15,10 +16,12 @@ namespace DeploymentManager.Tui.Presentation.Menus.Agents;
 public sealed class AgentsMenu
 {
     private readonly ICustomersService _customersService;
+    private readonly AuditLogsMenu _auditLogsMenu;
 
-    public AgentsMenu(ICustomersService customersService)
+    public AgentsMenu(ICustomersService customersService, AuditLogsMenu auditLogsMenu)
     {
         _customersService = customersService;
+        _auditLogsMenu = auditLogsMenu;
     }
 
     /// <summary>
@@ -38,6 +41,29 @@ public sealed class AgentsMenu
             {
                 AnsiConsole.Clear();
                 await ShowUpdateDesiredVersionPromptAsync(customerId, liveResult.Customer, ct);
+            }
+
+            if (liveResult.Action == AgentsMenuAction.ViewCustomerAuditLogs)
+            {
+                AnsiConsole.Clear();
+
+                var auditLogsMenuAction = await _auditLogsMenu.ShowAsync(
+                    customerId, AuditLogSource.Customer, liveResult.Customer.CompanyName, ct);
+
+                if (auditLogsMenuAction == AuditLogsMenuAction.Quit) return AgentsMenuAction.Quit;
+            }
+
+            if (liveResult.Action == AgentsMenuAction.ViewAgentAuditLogs)
+            {
+                AnsiConsole.Clear();
+                var selection = ShowAgentSelection(liveResult.Agents);
+
+                if (selection.IsBack || selection.Agent is null) continue;
+
+                var auditLogsMenuAction = await _auditLogsMenu.ShowAsync(
+                    selection.Agent.Id, AuditLogSource.Agent, liveResult.Customer.CompanyName, ct);
+
+                if (auditLogsMenuAction == AuditLogsMenuAction.Quit) return AgentsMenuAction.Quit;
             }
 
             if (liveResult.Action == AgentsMenuAction.Quit || liveResult.Action == AgentsMenuAction.Back)
@@ -83,6 +109,8 @@ public sealed class AgentsMenu
                     {
                         var key = Console.ReadKey(intercept: true).Key;
                         if (key == ConsoleKey.D) action = AgentsMenuAction.UpdateDesiredVersion;
+                        if (key == ConsoleKey.C) action = AgentsMenuAction.ViewCustomerAuditLogs;
+                        if (key == ConsoleKey.A && agents.Count > 0) action = AgentsMenuAction.ViewAgentAuditLogs;
                         if (key == ConsoleKey.B) action = AgentsMenuAction.Back;
                         if (key == ConsoleKey.Q) action = AgentsMenuAction.Quit;
                     }
@@ -94,6 +122,7 @@ public sealed class AgentsMenu
         return new AgentsLiveResult
         {
             Customer = customer,
+            Agents = agents,
             Action = action
         };
     }
@@ -109,17 +138,15 @@ public sealed class AgentsMenu
             ? 0
             : Math.Max(0, (int)(refreshInterval - (DateTimeOffset.UtcNow - lastFetch)).TotalSeconds);
 
-        var status = message is not null
-            ? message
-            : $"[Red3_1]•[/] [Grey70]Live data · next refresh in {nextUpdateIn}s[/]";
+        var status = $"[Red3_1]•[/] [Grey70]Live data · next refresh in {nextUpdateIn}s[/]";
 
         var desiredVersion = string.IsNullOrWhiteSpace(customer.DesiredVersion)
                              ? "[Grey70]None[/]"
                              : customer.DesiredVersion;
 
         var context = $"{customer.CompanyName} · Desired version: {desiredVersion}";
-        var content = BuildAgentsTable(agents);
-        var actions = "[DeepPink3_1]<D>[/] Update Desired Version  [DodgerBlue2]<B>[/] Back  [dim]<Q>[/] Quit";
+        IRenderable content = !agents.Any() && message is not null ? new Markup(message) : BuildAgentsTable(agents);
+        var actions = "[Gold1]<D>[/] Update Desired Version  [Purple_2]<C>[/] Customer Logs  [DeepPink3_1]<A>[/] Agent Logs  [DodgerBlue2]<B>[/] Back  [dim]<Q>[/] Quit";
 
         return ConsoleLayout.Build(status, context, content, actions);
     }
@@ -193,6 +220,57 @@ public sealed class AgentsMenu
         AnsiConsole.MarkupLine($"[Red3_1]{result.ErrorMessage}[/]\n\n" +
             "[Grey70]Press [Green3_1]<Enter>[/] to continue.[/]");
         Console.ReadKey();
+    }
+
+    private AgentSelectionItem ShowAgentSelection(IEnumerable<AgentViewModel> agents)
+    {
+        var status = "[Grey53]•[/] [Grey70]Live updates paused[/]";
+        var context = "[Purple_2]<↑ ↓>[/] Navigate  [Green3_1]<Enter>[/] Select";
+
+        ConsoleLayout.WriteHeader(status, context);
+
+        var selectionIndent = "  ";
+
+        AnsiConsole.MarkupLine(
+            selectionIndent +
+            $"{"Agent ID".PadRight(38)}" +
+            $"{"Current Version".PadRight(18)}" +
+            $"{"Status".PadRight(18)}" +
+            $"{"Platform"}");
+
+        var items = agents.Select(agent =>
+        {
+            var agentStatus = agent.Status switch
+            {
+                DeploymentStatus.NeedsUpdate => $"[Red3_1]{"! Needs update".PadRight(18)}[/]",
+                DeploymentStatus.UpToDate => $"[Green3_1]{"✓ Up to date".PadRight(18)}[/]",
+                _ => $"[Gold1]{"? Unknown".PadRight(18)}[/]"
+            };
+
+            return new AgentSelectionItem
+            {
+                Agent = agent,
+                Label =
+                    $"{agent.Id.ToString().PadRight(38)}" +
+                    $"{agent.CurrentVersion.PadRight(18)}" +
+                    $"{agentStatus}" +
+                    $"{agent.Platform}"
+            };
+        }).ToList();
+
+        items.Add(new AgentSelectionItem
+        {
+            IsBack = true,
+            Label = "[DodgerBlue2]← Back[/]"
+        });
+
+        var prompt = new SelectionPrompt<AgentSelectionItem>()
+            .PageSize(10)
+            .UseConverter(item => item.Label)
+            .HighlightStyle(new Style(Color.LightSeaGreen))
+            .AddChoices(items);
+
+        return AnsiConsole.Prompt(prompt);
     }
 
     private async Task<AgentsFetchResult> GetAgentViewModelsAsync(Guid customerId, CancellationToken ct)

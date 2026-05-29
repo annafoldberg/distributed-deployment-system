@@ -6,6 +6,7 @@ using DeploymentManager.Api.Application.Features.Customers.Commands;
 using DeploymentManager.Api.Domain.Entities;
 using DeploymentManager.Api.Application.Features.Customers.Errors;
 using DeploymentManager.Api.Application.Features.Common.Errors;
+using DeploymentManager.Api.Domain.Enums;
 
 namespace DeploymentManager.Api.Tests.Application.Features.Customers.Commands;
 
@@ -13,14 +14,16 @@ namespace DeploymentManager.Api.Tests.Application.Features.Customers.Commands;
 public sealed class UpdateDesiredVersionCommandHandlerTests
 {
     private Mock<IDeploymentManagerDbContext> _mockContext = null!;
+    private Mock<IAuditLogService> _mockAuditLogService = null!;
     private UpdateDesiredVersionCommandHandler _handler = null!;
 
     [TestInitialize]
     public void TestInitialize()
     {
         _mockContext = new Mock<IDeploymentManagerDbContext>();
+        _mockAuditLogService = new Mock<IAuditLogService>();
         var logger = Mock.Of<ILogger<UpdateDesiredVersionCommandHandler>>();
-        _handler = new UpdateDesiredVersionCommandHandler(_mockContext.Object, logger);
+        _handler = new UpdateDesiredVersionCommandHandler(_mockContext.Object, _mockAuditLogService.Object, logger);
     }
 
     [TestMethod]
@@ -39,6 +42,13 @@ public sealed class UpdateDesiredVersionCommandHandlerTests
 
         // Assert
         Assert.IsTrue(result.IsSuccess);
+        _mockAuditLogService.Verify(s =>
+            s.AddCustomerLogAsync(
+                customer.Id,
+                AuditLogLevel.Information,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once());
     }
 
     [TestMethod]
@@ -59,6 +69,13 @@ public sealed class UpdateDesiredVersionCommandHandlerTests
         Assert.IsTrue(result.IsFailed);
         Assert.HasCount(1, result.Errors);
         Assert.IsInstanceOfType(result.Errors[0], typeof(CustomerNotFoundError));
+        _mockAuditLogService.Verify(s =>
+            s.AddCustomerLogAsync(
+                It.IsAny<int>(),
+                It.IsAny<AuditLogLevel>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never());
     }
 
     [TestMethod]
@@ -79,6 +96,13 @@ public sealed class UpdateDesiredVersionCommandHandlerTests
         Assert.IsTrue(result.IsFailed);
         Assert.HasCount(1, result.Errors);
         Assert.IsInstanceOfType(result.Errors[0], typeof(ReleaseNotFoundError));
+        _mockAuditLogService.Verify(s =>
+            s.AddCustomerLogAsync(
+                customer.Id,
+                AuditLogLevel.Warning,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once());
     }
 
     [TestMethod]
@@ -100,6 +124,13 @@ public sealed class UpdateDesiredVersionCommandHandlerTests
         Assert.IsTrue(result.IsFailed);
         Assert.HasCount(1, result.Errors);
         Assert.IsInstanceOfType(result.Errors[0], typeof(DesiredVersionAlreadySetError));
+        _mockAuditLogService.Verify(s =>
+            s.AddCustomerLogAsync(
+                customer.Id,
+                AuditLogLevel.Information,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once());
     }
 
     // -------------------- Helper Methods --------------------

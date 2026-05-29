@@ -1,3 +1,4 @@
+using DeploymentManager.Tui.Application.Features.AuditLogs.Models;
 using DeploymentManager.Tui.Application.Features.Customers.Models;
 
 namespace DeploymentManager.Tui.Application.Features.Customers.Interfaces;
@@ -28,4 +29,20 @@ public interface IDeploymentManagerApiClient
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Operation result representing whether the desired version was updated successfully.</returns>
     Task<OperationResult> UpdateDesiredVersionAsync(Guid customerId, string desiredVersion, CancellationToken ct);
+
+    /// <summary>
+    /// Retrieves customer audit logs via Deployment Manager API.
+    /// </summary>
+    /// <param name="customerId">Identifier of the customer to retrieve audit logs for.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The customer audit logs if retrieval succeeds, otherwise <c>null</c>.</returns>
+    Task<List<AuditLog>?> GetCustomerAuditLogsAsync(Guid customerId, CancellationToken ct);
+
+    /// <summary>
+    /// Retrieves agent audit logs via Deployment Manager API.
+    /// </summary>
+    /// <param name="agentId">Identifier of the agent to retrieve audit logs for.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The agent audit logs if retrieval succeeds, otherwise <c>null</c>.</returns>
+    Task<List<AuditLog>?> GetAgentAuditLogsAsync(Guid agentId, CancellationToken ct);
 }

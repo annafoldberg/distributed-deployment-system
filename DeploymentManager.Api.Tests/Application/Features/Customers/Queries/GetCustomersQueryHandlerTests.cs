@@ -89,7 +89,7 @@ public sealed class GetCustomersQueryHandlerTests
     {
         var customersDbSet = customers is null
                              ? new List<Customer>().BuildMockDbSet()
-                             : new List<Customer>(customers).BuildMockDbSet();
+                             : customers.BuildMockDbSet();
 
         _mockContext.Setup(c => c.Customers).Returns(customersDbSet.Object);
     }

@@ -11,7 +11,7 @@ namespace DeploymentManager.Api.Presentation.Controllers;
 /// Exposes customer endpoints.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/customers")]
 public class CustomersController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -69,6 +69,8 @@ public class CustomersController : ControllerBase
         
         return result.ToActionResult();
     }
+
+
 }
 
 // Sources:

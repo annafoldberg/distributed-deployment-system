@@ -3,7 +3,7 @@ using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using DeploymentManager.Api.Application.Common.Interfaces;
 using DeploymentManager.Api.Application.Features.Customers.Dtos;
-using DeploymentManager.Api.Application.Features.Customers.Errors;
+using DeploymentManager.Api.Application.Features.Common.Errors;
 
 namespace DeploymentManager.Api.Application.Features.Customers.Queries;
 

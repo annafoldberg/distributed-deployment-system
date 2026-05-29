@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using DeploymentManager.Api.Application.Common.Interfaces;
 using DeploymentManager.Api.Application.Features.Customers.Queries;
 using DeploymentManager.Api.Domain.Entities;
-using DeploymentManager.Api.Application.Features.Customers.Errors;
+using DeploymentManager.Api.Application.Features.Common.Errors;
 
 namespace DeploymentManager.Api.Tests.Application.Features.Customers.Queries;
 

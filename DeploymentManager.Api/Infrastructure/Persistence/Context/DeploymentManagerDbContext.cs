@@ -19,6 +19,8 @@ public sealed class DeploymentManagerDbContext : DbContext, IDeploymentManagerDb
 
     public DbSet<Release> Releases { get; set; }
 
+    public DbSet<AuditLog> AuditLogs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DeploymentManagerDbContext).Assembly);

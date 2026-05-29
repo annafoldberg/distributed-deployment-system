@@ -1,4 +1,3 @@
-using DeploymentManager.Tui.Presentation.Enums;
 using DeploymentManager.Tui.Presentation.ViewModels;
 
 namespace DeploymentManager.Tui.Presentation.Menus.Customers;

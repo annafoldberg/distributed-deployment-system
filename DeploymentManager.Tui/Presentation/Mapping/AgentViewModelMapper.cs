@@ -1,5 +1,4 @@
 using DeploymentManager.Tui.Application.Features.Customers.Models;
-using DeploymentManager.Tui.Presentation.Enums;
 using DeploymentManager.Tui.Presentation.ViewModels;
 
 namespace DeploymentManager.Tui.Presentation.Mapping;
