@@ -40,7 +40,7 @@ public sealed class DeploymentManagerApiClientTests
 
     // -------------------- GetInstallationPackageAsync --------------------
     [TestMethod]
-    public async Task GetInstallationPackageAsync_IsValidResponse_ReturnsInstallationPackage()
+    public async Task GetInstallationPackageAsync_IsValidResponseWithPackage_ReturnsInstallationPackage()
     {
         // Arrange
         var requestUri = $"deployments/{_agentId}/package";

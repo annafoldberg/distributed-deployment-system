@@ -18,7 +18,7 @@ spec:
       terminationGracePeriodSeconds: 20
       containers:
       - name: api
-        image: ghcr.io/annafoldberg/api:dev-bd01f15fcd3611c311024228fda9ded29ab198ed
+        image: ghcr.io/annafoldberg/api:5a22dcb5920180f29e352dcdbadf82c4094e680f
         ports:
         - containerPort: 8080
         envFrom:

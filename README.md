@@ -5,12 +5,7 @@ A distributed system for automated deployment of software releases to customers.
 The system consists of three main applications:
 - **Deployment Manager API:** Stores and manages deployments
 - **Deployment Manager TUI:** Used internally to inspect and update deployments
-- **Deployment Manager Agent:** Runs in the customer environment and installs the desired version when a change is detected
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/system-architecture-overview-dark.png">
-  <img alt="System Architecture Overview" src="docs/diagrams/system-architecture-overview-light.png">
-</picture>
+- **Deployment Manager Agent:** Intended to be hosted in the customer environment and installs the desired version when a change is detected
 
 ---
 ## Systems
@@ -33,78 +28,21 @@ GET /api/Deployments/{agentId}/package
 | Status | Description |
 |--------|-------------|
 | 200 OK | Returns installation package |
-| 400 Bad Request | Invalid request, no update required, or no desired version set |
+| 204 No Content | No update required or no desired version set |
 | 404 Not Found | Agent or package not found |
-
-#### Feature: Retrieve Installation Package
-> The following diagrams show only components relevant to the feature. Framework components are omitted for clarity.
-
-##### Design
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/api-design-class-diagram-dark.png">
-  <img alt="API Design Class Diagram" src="docs/diagrams/api-design-class-diagram-light.png">
-</picture>
-
-##### Flow
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/api-sequence-diagram-dark.png">
-  <img alt="API Sequence Diagram" src="docs/diagrams/api-sequence-diagram-light.png">
-</picture>
+| 400 Bad Request | Invalid request |
 
 ### Deployment Manager TUI
-Console application used internally to monitor and manage deployments. Shows the current and desired software version for each customer and allows update of desired version.
+TUI application used internally to monitor and manage deployments. Shows the current and desired software version for each customer and allows update of desired version.
 
 ### Deployment Manager Agent
-Background worker that periodically checks for changes in the customer's desired software version, comparing it with the currently installed version, and when mismatch is detected, retrieves, downloads and installs a new release.
-
-#### Feature: Retrieve Installation Package
-> The following diagrams show only components relevant to the feature. Framework components are omitted for clarity.
-
-##### Design
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/agent-design-class-diagram-dark.png">
-  <img alt="Agent Design Class Diagram" src="docs/diagrams/agent-design-class-diagram-light.png">
-</picture>
-
-##### Flow
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/agent-sequence-diagram-dark.png">
-  <img alt="Agent Sequence Diagram" src="docs/diagrams/agent-sequence-diagram-light.png">
-</picture>
-
----
-## CI/CD Pipeline
-Each application has its own CI/CD pipeline.
-
-### Deployment Manager API
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/api-ci-cd-dark.png">
-  <img alt="API CI/CD Pipeline" src="docs/diagrams/api-ci-cd-light.png">
-</picture>
-
-### Deployment Manager TUI
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/tui-ci-cd-dark.png">
-  <img alt="TUI CI/CD Pipeline" src="docs/diagrams/tui-ci-cd-light.png">
-</picture>
-
-### Deployment Manager Agent
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/agent-ci-cd-dark.png">
-  <img alt="Agent CI/CD Pipeline" src="docs/diagrams/agent-ci-cd-light.png">
-</picture>
+Background worker that periodically checks for changes in the customer's desired software version, comparing it with the currently installed version, and when mismatch is detected, retrieves and installs a new release.
 
 ---
 ## Local Deployment
 > This setup has been developed and tested on macOS. Some commands may differ on other operating systems.
 
 ### Deployment Manager API & Database
-
-#### Kubernetes Network Architecture
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/kubernetes-network-architecture-dark.png">
-  <img alt="Kubernetes Network Architecture" src="docs/diagrams/kubernetes-network-architecture-light.png">
-</picture>
 
 #### DNS Configuration
 Add local DNS entry for deployment-manager.local:
@@ -220,18 +158,6 @@ kind delete cluster
 ```
 
 > Any MSSQL data will be lost once the cluster is deleted
-
-### Deployment Manager Agent
-#### Configure Environment Variables
-```bash
-export AgentIdentity__ApiKey="<api-key>"
-```
-
-#### Run Agent
-> Command must be executed from the repository root.  
-```bash
-dotnet run --project DeploymentManager.Agent/DeploymentManager.Agent.csproj
-```
 
 ---
 ## Related repository
