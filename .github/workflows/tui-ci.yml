@@ -12,6 +12,7 @@ on:
     paths:
       - 'DeploymentManager.Tui/**'
       - '.github/workflows/tui-ci.yml'
+      - '.github/workflows/tui-release.yml'
   pull_request:
     branches:
       - main
@@ -19,6 +20,7 @@ on:
     paths:
       - 'DeploymentManager.Tui/**'
       - '.github/workflows/tui-ci.yml'
+      - '.github/workflows/tui-release.yml'
 
 permissions:
   contents: read
