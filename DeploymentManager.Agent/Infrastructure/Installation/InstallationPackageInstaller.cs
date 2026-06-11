@@ -124,7 +124,7 @@ public sealed class InstallationPackageInstaller : IPackageInstaller
             {
                 var name = Path.GetFileName(sourceFile);
                 var destinationFile = Path.Combine(installDirectory, name);
-                var isExecutable = name.EndsWith(".exec", StringComparison.OrdinalIgnoreCase);
+                var isExecutable = name.Equals(_options.ExecutableName, StringComparison.OrdinalIgnoreCase);
                 
                 // Overwrite executable file
                 if (isExecutable)
