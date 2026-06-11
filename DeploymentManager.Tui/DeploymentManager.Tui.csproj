@@ -15,4 +15,11 @@
     <PackageReference Include="Spectre.Console" Version="0.55.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="appsettings*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
