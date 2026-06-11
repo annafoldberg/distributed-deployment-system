@@ -22,13 +22,15 @@ public sealed class InstallationPackageInstallerTests
         _testRoot = Path.Combine(Path.GetTempPath(), "installer-tests", Guid.NewGuid().ToString());
         var subDirectory = "TestSub";
         var appDirectory = "TestApp";
+        var executableName = "TestApp";
         _installDirectory = Path.Combine(_testRoot, subDirectory, appDirectory);
 
         var options = Options.Create(new InstallationOptions
         {
             Root = _testRoot,
             SubDirectory = subDirectory,
-            AppDirectory = appDirectory
+            AppDirectory = appDirectory,
+            ExecutableName = executableName
         });
 
         var logger = Mock.Of<ILogger<InstallationPackageInstaller>>();
@@ -46,7 +48,7 @@ public sealed class InstallationPackageInstallerTests
     public async Task InstallPackageAsync_ValidZipPackage_ReturnsSucceeded()
     {
         // Arrange
-        var execFile = ("artifacts/osx-arm64/UpdatableApp.exec", "executable content");
+        var execFile = ("artifacts/osx-arm64/TestApp", "executable content");
         var installationPackage = CreatePackage(new[] { execFile });
         
         // Act
@@ -60,7 +62,7 @@ public sealed class InstallationPackageInstallerTests
     public async Task InstallPackageAsync_ValidZipPackage_CreatesInstallDirectory()
     {
         // Arrange
-        var execFile = ("artifacts/osx-arm64/UpdatableApp.exec", "executable content");
+        var execFile = ("artifacts/osx-arm64/TestApp", "executable content");
         var installationPackage = CreatePackage(new[] { execFile });
         
         // Act
@@ -75,7 +77,7 @@ public sealed class InstallationPackageInstallerTests
     public async Task InstallPackageAsync_ValidZipPackage_CopiesExecutableToInstallDirectory()
     {
         // Arrange
-        var execFile = ("artifacts/osx-arm64/UpdatableApp.exec", "executable content");
+        var execFile = ("artifacts/osx-arm64/TestApp", "executable content");
         var installationPackage = CreatePackage(new[] { execFile });
         
         // Act
@@ -83,7 +85,7 @@ public sealed class InstallationPackageInstallerTests
 
         // Assert
         Assert.AreEqual(InstallationResult.Succeeded, result);
-        var file = Path.Combine(_installDirectory, "UpdatableApp.exec");
+        var file = Path.Combine(_installDirectory, "TestApp");
         Assert.IsTrue(File.Exists(file));
         var content = await File.ReadAllTextAsync(file);
         Assert.AreEqual("executable content", content);
@@ -94,10 +96,10 @@ public sealed class InstallationPackageInstallerTests
     {
         // Arrange
         Directory.CreateDirectory(_installDirectory);
-        var existingExecFile = Path.Combine(_installDirectory, "UpdatableApp.exec");
+        var existingExecFile = Path.Combine(_installDirectory, "TestApp");
         await File.WriteAllTextAsync(existingExecFile, "old executable content");
         
-        var newExecFile = ("artifacts/osx-arm64/UpdatableApp.exec", "new executable content");
+        var newExecFile = ("artifacts/osx-arm64/TestApp", "new executable content");
         var installationPackage = CreatePackage(new[] { newExecFile });
         
         // Act
@@ -106,7 +108,7 @@ public sealed class InstallationPackageInstallerTests
         // Assert
         Assert.AreEqual(InstallationResult.Succeeded, result);
         Assert.IsTrue(Directory.Exists(_installDirectory));
-        var file = Path.Combine(_installDirectory, "UpdatableApp.exec");
+        var file = Path.Combine(_installDirectory, "TestApp");
         Assert.IsTrue(File.Exists(file));
         var content = await File.ReadAllTextAsync(file);
         Assert.AreEqual("new executable content", content);
@@ -244,7 +246,7 @@ public sealed class InstallationPackageInstallerTests
     {
         // Arrange
         Directory.CreateDirectory(_installDirectory);
-        var existingExecFile = Path.Combine(_installDirectory, "UpdatableApp.exec");
+        var existingExecFile = Path.Combine(_installDirectory, "TestApp");
         await File.WriteAllTextAsync(existingExecFile, "old executable content");
 
         var badFile = ("../../path-traversal-test.txt", "file content");
@@ -256,7 +258,7 @@ public sealed class InstallationPackageInstallerTests
         // Assert
         Assert.AreEqual(InstallationResult.Failed, result);
         Assert.IsTrue(Directory.Exists(_installDirectory));
-        var file = Path.Combine(_installDirectory, "UpdatableApp.exec");
+        var file = Path.Combine(_installDirectory, "TestApp");
         Assert.IsTrue(File.Exists(file));
         var content = await File.ReadAllTextAsync(file);
         Assert.AreEqual("old executable content", content);
@@ -286,7 +288,7 @@ public sealed class InstallationPackageInstallerTests
     public async Task InstallPackageAsync_InstallationSucceeds_DeletesTemporaryDirectory()
     {
         // Arrange
-        var execFile = ("artifacts/osx-arm64/UpdatableApp.exec", "executable content");
+        var execFile = ("artifacts/osx-arm64/TestApp", "executable content");
         var installationPackage = CreatePackage(new[] { execFile });
         
         var parentDirectory = Path.GetDirectoryName(_installDirectory);
